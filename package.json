@@ -1,0 +1,35 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "@types/semver": "^7.7.0",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@high-nodejs/child_process": "^0.3.4",
+    "@jsbuffer/codec": "^1.0.7",
+    "@octokit/rest": "^22.0.0",
+    "@textstream/core": "^0.3.1",
+    "chalk": "^5.4.1",
+    "cli-argument-helper": "^2.3.0",
+    "diff": "^8.0.2",
+    "filesize": "^10.1.6",
+    "jsbuffer": "^2.0.12",
+    "node-fetch": "^3.3.2",
+    "semver": "^7.7.2",
+    "tar": "^7.4.3"
+  },
+  "name": "@nfscratch/nfs",
+  "version": "0.0.1",
+  "author": {
+    "name": "Victor Queiroz",
+    "email": "victorcqueirozg@gmail.com"
+  },
+  "description": "Node.js version manager with support for compiling its source code from scratch with custom parameters.",
+  "scripts": {
+    "build:schema": "npx jsbuffer src/schema/main.jsb -o schema --extends tsconfig.schema.json",
+    "prepublish": "npm run build:schema"
+  }
+}

@@ -1,0 +1,1 @@
+{ "compilerOptions": {  }, "include": ["0.0.1/main.jsb.ts", "main.jsb.ts", "__types__.ts"], "extends": "../tsconfig.schema.json" }
