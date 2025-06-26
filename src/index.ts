@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import path from "node:path";
 import { getArgument } from "cli-argument-helper";
 import getArgumentAssignment from "cli-argument-helper/getArgumentAssignment";
