@@ -1,22 +1,35 @@
 import getArgumentAssignment from "cli-argument-helper/getArgumentAssignment";
 import { getString } from "cli-argument-helper/string";
-import assert from "node:assert";
 import getSemanticVersion from "./getSemanticVersion";
 import path from "node:path";
+import assert from "node:assert";
 
 export default function getNodeInstallInformation({
   args,
+  overrideProperties: overrideProperties,
   rootDirectory,
 }: {
   args: string[];
   rootDirectory: string;
+  overrideProperties: {
+    version: string | null;
+    name: string | null;
+  } | null;
 }) {
-  const version = getArgumentAssignment(args, "--version", getSemanticVersion);
+  overrideProperties = overrideProperties ?? {
+    version: null,
+    name: null,
+  };
 
-  assert.strict.ok(version !== null, `--version argument is required`);
+  let { version, name } = overrideProperties;
 
-  const name = getArgumentAssignment(args, "--name", getString);
-  const pathItemList = [rootDirectory];
+  version =
+    version ?? getArgumentAssignment(args, "--version", getSemanticVersion);
+  name = name ?? getArgumentAssignment(args, "--name", getString);
+
+  assert.strict.ok(version !== null, `Failed to get version from arguments`);
+
+  const pathItemList: string[] = [rootDirectory];
 
   if (name !== null) {
     pathItemList.push("environments", name);

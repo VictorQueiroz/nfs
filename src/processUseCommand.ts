@@ -1,18 +1,23 @@
-import assert from "node:assert";
+import { getArgument } from "cli-argument-helper";
 import persistentLocalInstallationInformation from "./persistentLocalInstallationInformation";
-import {
-  decodeNodeVersionInstallationInformation,
-  encodeNodeVersionInstallationInformation,
-} from "../schema/0.0.1/main.jsb";
-import persistentDirectoryData from "./persistentDirectoryData";
+import assert from "node:assert";
 import defaults from "./config";
+import persistentDirectoryData from "./persistentDirectoryData";
 import getNodeInstallInformation from "./getNodeInstallInformation";
 
-export default async function getInstallationEnvironmentVariables(
-  args: string[],
-) {
+export default async function processUseCommand(args: string[]) {
+  const containsUseCommand = getArgument(args, "use");
+
+  if (containsUseCommand === null) {
+    return false;
+  }
+
   const process = await import("node:process");
   const path = await import("node:path");
+  const {
+    decodeNodeVersionInstallationInformation,
+    encodeNodeVersionInstallationInformation,
+  } = await import("../schema/0.0.1/main.jsb");
 
   let { PATH, MANPATH } = process.env;
 
@@ -74,8 +79,20 @@ export default async function getInstallationEnvironmentVariables(
   transformedEnvironmentVariables.MANPATH.unshift(
     path.resolve(existingInstallInfoHandle.location, "share/man"),
   );
-  return {
-    PATH: transformedEnvironmentVariables.PATH.join(":"),
-    MANPATH: transformedEnvironmentVariables.MANPATH.join(":"),
-  };
+
+  const { TextStream } = await import("@textstream/core");
+  const stream = await import("node:stream");
+
+  const cs = new TextStream();
+
+  for (const [key, value] of Object.entries(transformedEnvironmentVariables)) {
+    cs.write(`${key}=${value.join(":")}\n`);
+  }
+
+  await stream.promises.pipeline(
+    stream.PassThrough.from([new TextEncoder().encode(cs.value())]),
+    process.stdout,
+  );
+
+  return true;
 }
