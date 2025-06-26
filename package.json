@@ -27,9 +27,18 @@
     "name": "Victor Queiroz",
     "email": "victorcqueirozg@gmail.com"
   },
+  "bin": {
+    "nfs": "./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VictorQueiroz/nfs.git"
+  },
+  "license": "MIT",
   "description": "Node.js version manager with support for compiling its source code from scratch with custom parameters.",
   "scripts": {
     "build:schema": "npx jsbuffer src/schema/main.jsb -o schema --extends tsconfig.schema.json",
-    "prepublish": "npm run build:schema"
+    "prepublish": "npm run build:schema",
+    "prepublishOnly": "npx tsc -b src --force"
   }
 }
