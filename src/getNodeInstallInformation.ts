@@ -2,6 +2,7 @@ import getArgumentAssignment from "cli-argument-helper/getArgumentAssignment";
 import { getString } from "cli-argument-helper/string";
 import assert from "node:assert";
 import getSemanticVersion from "./getSemanticVersion";
+import path from "node:path";
 
 export default function getNodeInstallInformation({
   args,

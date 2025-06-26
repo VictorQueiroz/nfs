@@ -16,6 +16,7 @@
     "cli-argument-helper": "^2.3.0",
     "diff": "^8.0.2",
     "filesize": "^10.1.6",
+    "jsbi": "^4.3.2",
     "jsbuffer": "^2.0.12",
     "node-fetch": "^3.3.2",
     "semver": "^7.7.2",

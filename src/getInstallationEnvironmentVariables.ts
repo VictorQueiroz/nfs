@@ -6,6 +6,7 @@ import {
 } from "../schema/0.0.1/main.jsb";
 import persistentDirectoryData from "./persistentDirectoryData";
 import defaults from "./config";
+import getNodeInstallInformation from "./getNodeInstallInformation";
 
 export default async function getInstallationEnvironmentVariables(
   args: string[],

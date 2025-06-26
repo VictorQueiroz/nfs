@@ -4,6 +4,7 @@
     "types": [],
     "composite": true,
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
 
     "esModuleInterop": true,
     "preserveWatchOutput": true,
