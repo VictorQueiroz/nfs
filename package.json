@@ -7,6 +7,10 @@
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
+  "files": [
+    "schema/**/*.js",
+    "src/**/*.js"
+  ],
   "dependencies": {
     "@high-nodejs/child_process": "^0.3.4",
     "@jsbuffer/codec": "^1.0.7",
