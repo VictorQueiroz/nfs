@@ -52,12 +52,6 @@ export default async function installNodeVersion({
   const { extractedArchiveFolder } = await downloadSourceCode({ version, prefixDirectory });
 
   const configureArgs = configure?.arguments ?? [
-    // "--enable-asan",
-    // "--enable-ubsan",
-    // "--enable-lto",
-    // "--without-node-code-cache",
-    // "--v8-with-dchecks",
-    // "--v8-enable-object-print",
     "--prefix",
     prefixDirectory,
     "--debug",
@@ -65,8 +59,7 @@ export default async function installNodeVersion({
     "--use-prefix-to-find-headers",
     "--debug-lib",
     "--ninja",
-    "--download=all",
-    "--v8-non-optimized-debug"
+    "--download=all"
   ];
 
   let needsBuildConfiguration: boolean;
