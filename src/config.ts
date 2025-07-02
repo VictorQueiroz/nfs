@@ -68,4 +68,6 @@ const defaults: {
   rootDirectory: defaultRootDirectory ?? path.resolve(__dirname, "../installed")
 };
 
+export const logLevelEnvironmentVariableName = "NFS_LOG_LEVEL";
+
 export default defaults;
