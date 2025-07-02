@@ -9,6 +9,8 @@ import {
 } from "../schema/0.0.1/main.jsb";
 import resolveVersion from "./resolveVersion";
 
+// TODO: Add support for running certains patches before compiling again
+
 (async () => {
   const process = await import("node:process");
   const path = await import("node:path");
@@ -107,6 +109,17 @@ import resolveVersion from "./resolveVersion";
 
     const environmentInfo = await getEnvironmentInformationFromArguments(args, install.index);
     const resolvedVersion = await resolveVersion(environmentInfo);
+    const loggerArgs = [`Installing Node.js ${resolvedVersion.version}...`];
+
+    if (resolvedVersion.version.substring(1) !== environmentInfo.version) {
+      const chalk = (await import("chalk")).default;
+
+      loggerArgs.push(
+        `(${chalk.cyan(environmentInfo.version)} > ${chalk.cyan(resolvedVersion.version)})`
+      );
+    }
+
+    console.log(...loggerArgs);
 
     const processCreateNodejsEnvironmentCommand = (
       await import("./commands/install/processCreateNodejsEnvironmentCommand")
