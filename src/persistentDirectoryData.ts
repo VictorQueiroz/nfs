@@ -11,12 +11,9 @@ export default function persistentDirectoryData<T>(
   location: string,
   encode: (serializer: Serializer, input: T) => void,
   decode: (deserializer: Deserializer) => T | null,
-  compare: ((a: T, b: T) => boolean) | null = null,
+  compare: ((a: T, b: T) => boolean) | null = null
 ): IPersistentDirectoryData<T> {
-  const codec = new Codec({
-    textEncoder: new TextEncoder(),
-    textDecoder: new TextDecoder(),
-  });
+  const codec = new Codec({ textEncoder: new TextEncoder(), textDecoder: new TextDecoder() });
   const decodeFn = async (defaultValue: T | null = null): Promise<T | null> => {
     let result: T | null;
     const dataFileLocation = await dataFileLocationFromFolderLocation(location);
@@ -34,8 +31,7 @@ export default function persistentDirectoryData<T>(
      * If the `defaultValue` argument is provided, and `result` is still `null`,
      * try encoding the providerd `defaultValue`.
      */
-    result =
-      result ?? (defaultValue !== null ? await encodeFn(defaultValue) : null);
+    result = result ?? (defaultValue !== null ? await encodeFn(defaultValue) : null);
 
     return result;
   };
@@ -49,7 +45,7 @@ export default function persistentDirectoryData<T>(
 
     const decoded = await decodeFn(
       // Do not attempt to set a default value here.
-      null,
+      null
     );
 
     if (compare !== null && decoded !== null && !compare(input, decoded)) {
@@ -73,8 +69,5 @@ export default function persistentDirectoryData<T>(
 
     return input;
   };
-  return {
-    decode: decodeFn,
-    encode: encodeFn,
-  };
+  return { decode: decodeFn, encode: encodeFn };
 }

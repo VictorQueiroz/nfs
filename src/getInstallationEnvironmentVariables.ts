@@ -2,42 +2,35 @@ import assert from "node:assert";
 import persistentLocalInstallationInformation from "./persistentLocalInstallationInformation";
 import {
   decodeNodeVersionInstallationInformation,
-  encodeNodeVersionInstallationInformation,
+  encodeNodeVersionInstallationInformation
 } from "../schema/0.0.1/main.jsb";
 import persistentDirectoryData from "./persistentDirectoryData";
-import defaults from "./config";
-import getNodeInstallInformation from "./getNodeInstallInformation";
+import findNodeInstallInformation from "./findNodeInstallInformation";
 
 export default async function getInstallationEnvironmentVariables(
-  args: string[],
+  rootDirectory: string,
+  environmentInfo: { version: string | null; environmentName: string | null }
 ) {
   const process = await import("node:process");
   const path = await import("node:path");
 
-  let { PATH, MANPATH } = process.env;
+  const { PATH = null, MANPATH = null } = process.env;
 
   const transformedEnvironmentVariables = {
     PATH: [...(PATH?.split(":") ?? [])],
-    MANPATH: [...(MANPATH?.split(":") ?? [])],
+    MANPATH: [...(MANPATH?.split(":") ?? [])]
   };
 
-  const nfsInstallInfo =
-    await persistentLocalInstallationInformation().decode(null);
+  const nfsInstallInfo = await persistentLocalInstallationInformation(rootDirectory).decode(null);
 
-  assert.strict.ok(
-    nfsInstallInfo !== null,
-    `Failed to decode installation information`,
-  );
+  assert.strict.ok(nfsInstallInfo !== null, `Failed to decode installation information`);
 
   // Remove old prefixes from environment variables
   for (const [, value] of Object.entries(transformedEnvironmentVariables)) {
-    for (const prefix of nfsInstallInfo.rootDirectories) {
+    for (const prefix of nfsInstallInfo.installRootDirectories) {
       for (let i = 0; i < value.length; i++) {
         const environmentVariableItem = value[i] ?? null;
-        assert.strict.ok(
-          environmentVariableItem !== null,
-          `Environment variable item is null`,
-        );
+        assert.strict.ok(environmentVariableItem !== null, `Environment variable item is null`);
         if (environmentVariableItem.startsWith(prefix)) {
           value.splice(i, 1);
           i--;
@@ -46,36 +39,47 @@ export default async function getInstallationEnvironmentVariables(
     }
   }
 
-  const targetInstallInformation = getNodeInstallInformation({
-    args,
-    rootDirectory: defaults.rootDirectory,
-    overrideProperties: null,
-  });
+  const targetInstallInformationList = await findNodeInstallInformation(
+    rootDirectory,
+    environmentInfo
+  );
+
+  if (
+    targetInstallInformationList.size === 0 ||
+    // The arguments match more than one version
+    targetInstallInformationList.size > 1
+  ) {
+    return null;
+  }
+
+  const [targetInstallInformation = null] = Array.from(targetInstallInformationList);
+
+  if (targetInstallInformation === null) {
+    return null;
+  }
 
   const existingInstallInfoHandle = await persistentDirectoryData(
-    targetInstallInformation.prefixDirectory,
+    targetInstallInformation.location,
     encodeNodeVersionInstallationInformation,
-    decodeNodeVersionInstallationInformation,
+    decodeNodeVersionInstallationInformation
   ).decode(null);
 
   if (existingInstallInfoHandle === null) {
-    console.error(
-      `No installation found for ${targetInstallInformation.version}`,
-    );
+    console.error(`No installation found for ${targetInstallInformation.id.version}`);
     process.exitCode = 1;
-    return true;
+    return null;
   }
 
   // Add new values
   transformedEnvironmentVariables.PATH.unshift(
-    path.resolve(existingInstallInfoHandle.location, "bin"),
+    path.resolve(existingInstallInfoHandle.location, "bin")
   );
 
   transformedEnvironmentVariables.MANPATH.unshift(
-    path.resolve(existingInstallInfoHandle.location, "share/man"),
+    path.resolve(existingInstallInfoHandle.location, "share/man")
   );
   return {
     PATH: transformedEnvironmentVariables.PATH.join(":"),
-    MANPATH: transformedEnvironmentVariables.MANPATH.join(":"),
+    MANPATH: transformedEnvironmentVariables.MANPATH.join(":")
   };
 }

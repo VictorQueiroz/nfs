@@ -9,6 +9,11 @@
     "esModuleInterop": true,
     "preserveWatchOutput": true,
 
+    // Source maps
+    "declarationMap": true,
+    "inlineSources": true,
+    "inlineSourceMap": true,
+
     // Type checking options
     "strict": true,
     "noImplicitAny": true,

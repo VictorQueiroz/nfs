@@ -1,14 +1,13 @@
 import {
   decodeNodeFromScratchInstallationInformation,
-  encodeNodeFromScratchInstallationInformation,
+  encodeNodeFromScratchInstallationInformation
 } from "../schema/0.0.1/main.jsb";
-import defaults from "./config";
 import persistentDirectoryData from "./persistentDirectoryData";
 
-export default function persistentLocalInstallationInformation() {
+export default function persistentLocalInstallationInformation(rootDirectory: string) {
   return persistentDirectoryData(
-    defaults.rootDirectory,
+    rootDirectory,
     encodeNodeFromScratchInstallationInformation,
-    decodeNodeFromScratchInstallationInformation,
+    decodeNodeFromScratchInstallationInformation
   );
 }

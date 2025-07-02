@@ -1,94 +1,70 @@
 import { ISerializer } from "../__types__";
 import { IDeserializer } from "../__types__";
-import JSBI from "jsbi";
 export interface NodeVersionInstallationInformation  {
     _name: '001.main.NodeVersionInstallationInformation';
-    name: string | null;
-    version: string;
+    id: Readonly<NodeVersionInstallationInformationReference>;
     location: string;
     buildInformation: Readonly<NodeVersionInstallationBuildInformation>;
 }
 export function isNodeVersionInstallationInformation(value: unknown): value is NodeVersionInstallationInformation {
     if(!(typeof value === 'object' && value !== null && '_name' in value && typeof value['_name'] === 'string' && value['_name'] === "001.main.NodeVersionInstallationInformation")) return false;
     if(!(
-        "name" in value && ((__v0) => (__v0 === null ? true : ((x) => (typeof x === 'string'))(__v0)))(value['name'])
+        "id" in value && ((__v0) => (isNodeVersionInstallationInformationReference(__v0)))(value['id'])
     )) return false;
     if(!(
-        "version" in value && ((__v2) => (typeof __v2 === 'string'))(value['version'])
+        "location" in value && ((__v1) => (typeof __v1 === 'string'))(value['location'])
     )) return false;
     if(!(
-        "location" in value && ((__v3) => (typeof __v3 === 'string'))(value['location'])
-    )) return false;
-    if(!(
-        "buildInformation" in value && ((__v4) => (isNodeVersionInstallationBuildInformation(__v4)))(value['buildInformation'])
+        "buildInformation" in value && ((__v2) => (isNodeVersionInstallationBuildInformation(__v2)))(value['buildInformation'])
     )) return false;
     return true;
 }
 export interface NodeVersionInstallationInformationInputParams {
-    name: string | null;
-    version: string;
+    id: Readonly<NodeVersionInstallationInformationReference>;
     location: string;
     buildInformation: Readonly<NodeVersionInstallationBuildInformation>;
 }
 export function NodeVersionInstallationInformation(params: NodeVersionInstallationInformationInputParams): NodeVersionInstallationInformation {
     return {
         _name: '001.main.NodeVersionInstallationInformation',
-        name: params['name'],
-        version: params['version'],
+        id: params['id'],
         location: params['location'],
         buildInformation: params['buildInformation']
     };
 }
 export function encodeNodeVersionInstallationInformation(__s: ISerializer, value: NodeVersionInstallationInformation) {
-    __s.writeInt32(-1603961224);
+    __s.writeInt32(1843473502);
     /**
-     * encoding param: name
+     * encoding param: id
      */
-    const __pv0 = value['name'];
-    if(__pv0 === null) {
-        __s.writeUint8(0);
-    } else {
-        __s.writeUint8(1);
-        __s.writeString(__pv0);
-    }
-    /**
-     * encoding param: version
-     */
-    const __pv2 = value['version'];
-    __s.writeString(__pv2);
+    const __pv0 = value['id'];
+    encodeNodeVersionInstallationInformationReference(__s,__pv0);
     /**
      * encoding param: location
      */
-    const __pv3 = value['location'];
-    __s.writeString(__pv3);
+    const __pv1 = value['location'];
+    __s.writeString(__pv1);
     /**
      * encoding param: buildInformation
      */
-    const __pv4 = value['buildInformation'];
-    encodeNodeVersionInstallationBuildInformation(__s,__pv4);
+    const __pv2 = value['buildInformation'];
+    encodeNodeVersionInstallationBuildInformation(__s,__pv2);
 }
 export function decodeNodeVersionInstallationInformation(__d: IDeserializer): NodeVersionInstallationInformation | null {
     const __id = __d.readInt32();
     /**
      * decode header
      */
-    if(__id !== -1603961224) return null;
-    let name: string | null;
-    let version: string;
+    if(__id !== 1843473502) return null;
+    let id: NodeVersionInstallationInformationReference;
     let location: string;
     let buildInformation: NodeVersionInstallationBuildInformation;
     /**
-     * decoding param: name
+     * decoding param: id
      */
-    if(__d.readUint8() === 1) {
-        name = __d.readString();
-    } else {
-        name = null;
-    }
-    /**
-     * decoding param: version
-     */
-    version = __d.readString();
+    const __tmp1 = decodeNodeVersionInstallationInformationReference(__d);
+    if(__tmp1 === null) return null;
+    id = __tmp1;
     /**
      * decoding param: location
      */
@@ -96,21 +72,19 @@ export function decodeNodeVersionInstallationInformation(__d: IDeserializer): No
     /**
      * decoding param: buildInformation
      */
-    const __tmp5 = decodeNodeVersionInstallationBuildInformation(__d);
-    if(__tmp5 === null) return null;
-    buildInformation = __tmp5;
+    const __tmp3 = decodeNodeVersionInstallationBuildInformation(__d);
+    if(__tmp3 === null) return null;
+    buildInformation = __tmp3;
     return {
         _name: '001.main.NodeVersionInstallationInformation',
-        name,
-        version,
+        id,
         location,
         buildInformation
     };
 }
 export function defaultNodeVersionInstallationInformation(params: Partial<NodeVersionInstallationInformationInputParams> = {}): NodeVersionInstallationInformation {
     return NodeVersionInstallationInformation({
-        name: null,
-        version: "",
+        id: defaultNodeVersionInstallationInformationReference(),
         location: "",
         buildInformation: defaultNodeVersionInstallationBuildInformation(),
         ...params
@@ -119,13 +93,9 @@ export function defaultNodeVersionInstallationInformation(params: Partial<NodeVe
 export function compareNodeVersionInstallationInformation(__a: NodeVersionInstallationInformation, __b: NodeVersionInstallationInformation): boolean {
     return (
         /**
-         * compare parameter name
+         * compare parameter id
          */
-        ((__dp01, __dp02) => __dp01 !== null && __dp02 !== null ? __dp01 === __dp02 : __dp01 === __dp02)(__a['name'],__b['name']) &&
-        /**
-         * compare parameter version
-         */
-        __a['version'] === __b['version'] &&
+        compareNodeVersionInstallationInformationReference(__a['id'],__b['id']) &&
         /**
          * compare parameter location
          */
@@ -137,19 +107,11 @@ export function compareNodeVersionInstallationInformation(__a: NodeVersionInstal
     );
 }
 export function updateNodeVersionInstallationInformation(value: NodeVersionInstallationInformation, changes: Partial<NodeVersionInstallationInformationInputParams>) {
-    if(typeof changes['name'] !== 'undefined') {
-        if(!(((__dp11, __dp12) => __dp11 !== null && __dp12 !== null ? __dp11 === __dp12 : __dp11 === __dp12)(changes['name'],value['name']))) {
+    if(typeof changes['id'] !== 'undefined') {
+        if(!(compareNodeVersionInstallationInformationReference(changes['id'],value['id']))) {
             value = NodeVersionInstallationInformation({
                 ...value,
-                name: changes['name'],
-            });
-        }
-    }
-    if(typeof changes['version'] !== 'undefined') {
-        if(!(changes['version'] === value['version'])) {
-            value = NodeVersionInstallationInformation({
-                ...value,
-                version: changes['version'],
+                id: changes['id'],
             });
         }
     }
@@ -279,43 +241,123 @@ export function updateNodeVersionInstallationBuildInformation(value: NodeVersion
     }
     return value;
 }
+export interface NodeFromScratchInstallationConfigurationInformation  {
+    _name: '001.main.NodeFromScratchInstallationConfigurationInformation';
+    defaultInstallation: Readonly<NodeVersionInstallationInformationReference> | null;
+}
+export function isNodeFromScratchInstallationConfigurationInformation(value: unknown): value is NodeFromScratchInstallationConfigurationInformation {
+    if(!(typeof value === 'object' && value !== null && '_name' in value && typeof value['_name'] === 'string' && value['_name'] === "001.main.NodeFromScratchInstallationConfigurationInformation")) return false;
+    if(!(
+        "defaultInstallation" in value && ((__v0) => (__v0 === null ? true : ((x) => (isNodeVersionInstallationInformationReference(x)))(__v0)))(value['defaultInstallation'])
+    )) return false;
+    return true;
+}
+export interface NodeFromScratchInstallationConfigurationInformationInputParams {
+    defaultInstallation: Readonly<NodeVersionInstallationInformationReference> | null;
+}
+export function NodeFromScratchInstallationConfigurationInformation(params: NodeFromScratchInstallationConfigurationInformationInputParams): NodeFromScratchInstallationConfigurationInformation {
+    return {
+        _name: '001.main.NodeFromScratchInstallationConfigurationInformation',
+        defaultInstallation: params['defaultInstallation']
+    };
+}
+export function encodeNodeFromScratchInstallationConfigurationInformation(__s: ISerializer, value: NodeFromScratchInstallationConfigurationInformation) {
+    __s.writeInt32(-2100621895);
+    /**
+     * encoding param: defaultInstallation
+     */
+    const __pv0 = value['defaultInstallation'];
+    if(__pv0 === null) {
+        __s.writeUint8(0);
+    } else {
+        __s.writeUint8(1);
+        encodeNodeVersionInstallationInformationReference(__s,__pv0);
+    }
+}
+export function decodeNodeFromScratchInstallationConfigurationInformation(__d: IDeserializer): NodeFromScratchInstallationConfigurationInformation | null {
+    const __id = __d.readInt32();
+    /**
+     * decode header
+     */
+    if(__id !== -2100621895) return null;
+    let defaultInstallation: NodeVersionInstallationInformationReference | null;
+    /**
+     * decoding param: defaultInstallation
+     */
+    if(__d.readUint8() === 1) {
+        const __tmp2 = decodeNodeVersionInstallationInformationReference(__d);
+        if(__tmp2 === null) return null;
+        defaultInstallation = __tmp2;
+    } else {
+        defaultInstallation = null;
+    }
+    return {
+        _name: '001.main.NodeFromScratchInstallationConfigurationInformation',
+        defaultInstallation
+    };
+}
+export function defaultNodeFromScratchInstallationConfigurationInformation(params: Partial<NodeFromScratchInstallationConfigurationInformationInputParams> = {}): NodeFromScratchInstallationConfigurationInformation {
+    return NodeFromScratchInstallationConfigurationInformation({
+        defaultInstallation: null,
+        ...params
+    });
+}
+export function compareNodeFromScratchInstallationConfigurationInformation(__a: NodeFromScratchInstallationConfigurationInformation, __b: NodeFromScratchInstallationConfigurationInformation): boolean {
+    return (
+        /**
+         * compare parameter defaultInstallation
+         */
+        ((__dp01, __dp02) => __dp01 !== null && __dp02 !== null ? compareNodeVersionInstallationInformationReference(__dp01,__dp02) : __dp01 === __dp02)(__a['defaultInstallation'],__b['defaultInstallation'])
+    );
+}
+export function updateNodeFromScratchInstallationConfigurationInformation(value: NodeFromScratchInstallationConfigurationInformation, changes: Partial<NodeFromScratchInstallationConfigurationInformationInputParams>) {
+    if(typeof changes['defaultInstallation'] !== 'undefined') {
+        if(!(((__dp11, __dp12) => __dp11 !== null && __dp12 !== null ? compareNodeVersionInstallationInformationReference(__dp11,__dp12) : __dp11 === __dp12)(changes['defaultInstallation'],value['defaultInstallation']))) {
+            value = NodeFromScratchInstallationConfigurationInformation({
+                ...value,
+                defaultInstallation: changes['defaultInstallation'],
+            });
+        }
+    }
+    return value;
+}
 export interface NodeFromScratchInstallationInformation  {
     _name: '001.main.NodeFromScratchInstallationInformation';
-    date: number;
-    rootDirectories: ReadonlySet<string>;
+    location: string;
+    installRootDirectories: ReadonlySet<string>;
 }
 export function isNodeFromScratchInstallationInformation(value: unknown): value is NodeFromScratchInstallationInformation {
     if(!(typeof value === 'object' && value !== null && '_name' in value && typeof value['_name'] === 'string' && value['_name'] === "001.main.NodeFromScratchInstallationInformation")) return false;
     if(!(
-        "date" in value && ((__v0) => (typeof __v0 === 'number' && JSBI.equal(JSBI.BigInt(__v0),JSBI.BigInt(__v0)) && JSBI.greaterThanOrEqual(JSBI.BigInt(__v0),JSBI.BigInt("-2147483648")) && JSBI.lessThanOrEqual(JSBI.BigInt(__v0),JSBI.BigInt("2147483647"))))(value['date'])
+        "location" in value && ((__v0) => (typeof __v0 === 'string'))(value['location'])
     )) return false;
     if(!(
-        "rootDirectories" in value && ((__v1) => ((Array.isArray(__v1) || __v1 instanceof Set) && Array.from(__v1).every(p => (typeof p === 'string'))))(value['rootDirectories'])
+        "installRootDirectories" in value && ((__v1) => ((Array.isArray(__v1) || __v1 instanceof Set) && Array.from(__v1).every(p => (typeof p === 'string'))))(value['installRootDirectories'])
     )) return false;
     return true;
 }
 export interface NodeFromScratchInstallationInformationInputParams {
-    date: number;
-    rootDirectories: ReadonlySet<string>;
+    location: string;
+    installRootDirectories: ReadonlySet<string>;
 }
 export function NodeFromScratchInstallationInformation(params: NodeFromScratchInstallationInformationInputParams): NodeFromScratchInstallationInformation {
     return {
         _name: '001.main.NodeFromScratchInstallationInformation',
-        date: params['date'],
-        rootDirectories: params['rootDirectories']
+        location: params['location'],
+        installRootDirectories: params['installRootDirectories']
     };
 }
 export function encodeNodeFromScratchInstallationInformation(__s: ISerializer, value: NodeFromScratchInstallationInformation) {
-    __s.writeInt32(1569429326);
+    __s.writeInt32(559808368);
     /**
-     * encoding param: date
+     * encoding param: location
      */
-    const __pv0 = value['date'];
-    __s.writeInt32(__pv0);
+    const __pv0 = value['location'];
+    __s.writeString(__pv0);
     /**
-     * encoding param: rootDirectories
+     * encoding param: installRootDirectories
      */
-    const __pv1 = value['rootDirectories'];
+    const __pv1 = value['installRootDirectories'];
     const __l2 = __pv1.size;
     __s.writeUint32(__l2);
     for(const __v2 of __pv1) {
@@ -327,63 +369,162 @@ export function decodeNodeFromScratchInstallationInformation(__d: IDeserializer)
     /**
      * decode header
      */
-    if(__id !== 1569429326) return null;
-    let date: number;
-    let rootDirectories: Set<string>;
+    if(__id !== 559808368) return null;
+    let location: string;
+    let installRootDirectories: Set<string>;
     /**
-     * decoding param: date
+     * decoding param: location
      */
-    date = __d.readInt32();
+    location = __d.readString();
     /**
-     * decoding param: rootDirectories
+     * decoding param: installRootDirectories
      */
     let __tmp2: string;
     const __l2 = __d.readUint32();
     const __o2 = new Set<string>();
-    rootDirectories = __o2;
+    installRootDirectories = __o2;
     for(let __i2 = 0; __i2 < __l2; __i2++) {
         __tmp2 = __d.readString();
         __o2.add(__tmp2);
     }
     return {
         _name: '001.main.NodeFromScratchInstallationInformation',
-        date,
-        rootDirectories
+        location,
+        installRootDirectories
     };
 }
 export function defaultNodeFromScratchInstallationInformation(params: Partial<NodeFromScratchInstallationInformationInputParams> = {}): NodeFromScratchInstallationInformation {
     return NodeFromScratchInstallationInformation({
-        date: 0,
-        rootDirectories: new Set<string>(),
+        location: "",
+        installRootDirectories: new Set<string>(),
         ...params
     });
 }
 export function compareNodeFromScratchInstallationInformation(__a: NodeFromScratchInstallationInformation, __b: NodeFromScratchInstallationInformation): boolean {
     return (
         /**
-         * compare parameter date
+         * compare parameter location
          */
-        __a['date'] === __b['date'] &&
+        __a['location'] === __b['location'] &&
         /**
-         * compare parameter rootDirectories
+         * compare parameter installRootDirectories
          */
-        __a['rootDirectories'].size === __b['rootDirectories'].size && Array.from(__a['rootDirectories']).every((__originalItem1,__index1) => (typeof __originalItem1 === 'undefined' ? false : (__item1 => typeof __item1 === 'undefined' ? false : (__originalItem1 === __item1))(Array.from(__b['rootDirectories'])[__index1])))
+        __a['installRootDirectories'].size === __b['installRootDirectories'].size && Array.from(__a['installRootDirectories']).every((__originalItem1,__index1) => (typeof __originalItem1 === 'undefined' ? false : (__item1 => typeof __item1 === 'undefined' ? false : (__originalItem1 === __item1))(Array.from(__b['installRootDirectories'])[__index1])))
     );
 }
 export function updateNodeFromScratchInstallationInformation(value: NodeFromScratchInstallationInformation, changes: Partial<NodeFromScratchInstallationInformationInputParams>) {
-    if(typeof changes['date'] !== 'undefined') {
-        if(!(changes['date'] === value['date'])) {
+    if(typeof changes['location'] !== 'undefined') {
+        if(!(changes['location'] === value['location'])) {
             value = NodeFromScratchInstallationInformation({
                 ...value,
-                date: changes['date'],
+                location: changes['location'],
             });
         }
     }
-    if(typeof changes['rootDirectories'] !== 'undefined') {
-        if(!(changes['rootDirectories'].size === value['rootDirectories'].size && Array.from(changes['rootDirectories']).every((__originalItem2,__index2) => (typeof __originalItem2 === 'undefined' ? false : (__item2 => typeof __item2 === 'undefined' ? false : (__originalItem2 === __item2))(Array.from(value['rootDirectories'])[__index2]))))) {
+    if(typeof changes['installRootDirectories'] !== 'undefined') {
+        if(!(changes['installRootDirectories'].size === value['installRootDirectories'].size && Array.from(changes['installRootDirectories']).every((__originalItem2,__index2) => (typeof __originalItem2 === 'undefined' ? false : (__item2 => typeof __item2 === 'undefined' ? false : (__originalItem2 === __item2))(Array.from(value['installRootDirectories'])[__index2]))))) {
             value = NodeFromScratchInstallationInformation({
                 ...value,
-                rootDirectories: changes['rootDirectories'],
+                installRootDirectories: changes['installRootDirectories'],
+            });
+        }
+    }
+    return value;
+}
+export interface NodeVersionInstallationInformationReference  {
+    _name: '001.main.NodeVersionInstallationInformationReference';
+    name: string;
+    version: string;
+}
+export function isNodeVersionInstallationInformationReference(value: unknown): value is NodeVersionInstallationInformationReference {
+    if(!(typeof value === 'object' && value !== null && '_name' in value && typeof value['_name'] === 'string' && value['_name'] === "001.main.NodeVersionInstallationInformationReference")) return false;
+    if(!(
+        "name" in value && ((__v0) => (typeof __v0 === 'string'))(value['name'])
+    )) return false;
+    if(!(
+        "version" in value && ((__v1) => (typeof __v1 === 'string'))(value['version'])
+    )) return false;
+    return true;
+}
+export interface NodeVersionInstallationInformationReferenceInputParams {
+    name: string;
+    version: string;
+}
+export function NodeVersionInstallationInformationReference(params: NodeVersionInstallationInformationReferenceInputParams): NodeVersionInstallationInformationReference {
+    return {
+        _name: '001.main.NodeVersionInstallationInformationReference',
+        name: params['name'],
+        version: params['version']
+    };
+}
+export function encodeNodeVersionInstallationInformationReference(__s: ISerializer, value: NodeVersionInstallationInformationReference) {
+    __s.writeInt32(655918101);
+    /**
+     * encoding param: name
+     */
+    const __pv0 = value['name'];
+    __s.writeString(__pv0);
+    /**
+     * encoding param: version
+     */
+    const __pv1 = value['version'];
+    __s.writeString(__pv1);
+}
+export function decodeNodeVersionInstallationInformationReference(__d: IDeserializer): NodeVersionInstallationInformationReference | null {
+    const __id = __d.readInt32();
+    /**
+     * decode header
+     */
+    if(__id !== 655918101) return null;
+    let name: string;
+    let version: string;
+    /**
+     * decoding param: name
+     */
+    name = __d.readString();
+    /**
+     * decoding param: version
+     */
+    version = __d.readString();
+    return {
+        _name: '001.main.NodeVersionInstallationInformationReference',
+        name,
+        version
+    };
+}
+export function defaultNodeVersionInstallationInformationReference(params: Partial<NodeVersionInstallationInformationReferenceInputParams> = {}): NodeVersionInstallationInformationReference {
+    return NodeVersionInstallationInformationReference({
+        name: "",
+        version: "",
+        ...params
+    });
+}
+export function compareNodeVersionInstallationInformationReference(__a: NodeVersionInstallationInformationReference, __b: NodeVersionInstallationInformationReference): boolean {
+    return (
+        /**
+         * compare parameter name
+         */
+        __a['name'] === __b['name'] &&
+        /**
+         * compare parameter version
+         */
+        __a['version'] === __b['version']
+    );
+}
+export function updateNodeVersionInstallationInformationReference(value: NodeVersionInstallationInformationReference, changes: Partial<NodeVersionInstallationInformationReferenceInputParams>) {
+    if(typeof changes['name'] !== 'undefined') {
+        if(!(changes['name'] === value['name'])) {
+            value = NodeVersionInstallationInformationReference({
+                ...value,
+                name: changes['name'],
+            });
+        }
+    }
+    if(typeof changes['version'] !== 'undefined') {
+        if(!(changes['version'] === value['version'])) {
+            value = NodeVersionInstallationInformationReference({
+                ...value,
+                version: changes['version'],
             });
         }
     }

@@ -1,4 +1,13 @@
 {
   "tabWidth": 2,
+  "singleQuote": false,
+  "semi": true,
+  "trailingComma": "none",
+  "objectWrap": "collapse",
+  "printWidth": 100,
+  "embeddedLanguageFormatting": "auto",
+  "quoteProps": "consistent",
+  "cursorOffset": -1,
+  "proseWrap": "never",
   "useTabs": false
 }

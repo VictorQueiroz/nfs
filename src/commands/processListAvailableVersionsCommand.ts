@@ -1,62 +1,30 @@
-import { getArgument } from "cli-argument-helper";
-import getArgumentAssignmentFromIndex from "cli-argument-helper/getArgumentAssignmentFromIndex";
-import prettyPrintNodejsVersionInformation, {
-  INodeVersionInfo,
-} from "./list/prettyPrintNodejsVersionInformation";
-import getNodejsVersionFilterTypeFromString, {
-  NodejsVersionFilterType,
-} from "./list/getNodejsVersionFilterTypeFromString";
-
-export default async function processListAvailableVersionsCommand({
-  args,
-}: {
-  args: string[];
-}) {
+export default async function processListAvailableVersionsCommand(args: string[], index: number) {
   const { getString } = await import("cli-argument-helper/string");
-  const listVersions = getArgument(args, "list") ?? getArgument(args, "-l");
+  const listNodejsVersions = (await import("./list/listNodejsVersions")).default;
+  const getArgumentAssignmentFromIndex = (
+    await import("cli-argument-helper/getArgumentAssignmentFromIndex")
+  ).default;
 
-  if (listVersions === null) {
-    return false;
-  }
+  const { NodejsVersionFilterType } = await import("./list/getNodejsVersionFilterTypeFromString");
+  const getNodejsVersionFilterTypeFromString = (
+    await import("./list/getNodejsVersionFilterTypeFromString")
+  ).default;
 
   const filters =
     ["-f", "--filter"]
       .reduce<string | null>((acc, argumentName) => {
-        return (
-          acc ??
-          getArgumentAssignmentFromIndex(
-            args,
-            listVersions.index,
-            argumentName,
-            getString,
-          )
-        );
+        return acc ?? getArgumentAssignmentFromIndex(args, index, argumentName, getString);
       }, null)
       ?.split(",")
       .map(getNodejsVersionFilterTypeFromString) ?? null;
 
   const version =
-    getArgumentAssignmentFromIndex(
-      args,
-      listVersions.index,
-      "--version",
-      getString,
-    ) ??
-    getString(args, listVersions.index) ??
+    getArgumentAssignmentFromIndex(args, index, "--version", getString) ??
+    getString(args, index) ??
     null;
-
-  const res = await fetch("https://nodejs.org/download/release/index.json", {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      // Cache for 1 day
-      "Cache-Control": "max-age=86400",
-    },
-  });
-
   const semver = await import("semver");
 
-  const versions = ((await res.json()) as INodeVersionInfo[])
+  const versions = (await listNodejsVersions())
     .sort((a, b) => semver.compare(a.version, b.version))
     .filter((versionInfo) => {
       if (filters !== null) {
@@ -64,10 +32,7 @@ export default async function processListAvailableVersionsCommand({
           return false;
         }
 
-        if (
-          filters.includes(NodejsVersionFilterType.Security) &&
-          !versionInfo.security
-        ) {
+        if (filters.includes(NodejsVersionFilterType.Security) && !versionInfo.security) {
           return false;
         }
       }
@@ -79,6 +44,10 @@ export default async function processListAvailableVersionsCommand({
       return true;
     });
 
+  const prettyPrintNodejsVersionInformation = (
+    await import("./list/prettyPrintNodejsVersionInformation")
+  ).default;
+
   for (const versionInfo of versions) {
     await prettyPrintNodejsVersionInformation(versionInfo);
 
@@ -86,6 +55,12 @@ export default async function processListAvailableVersionsCommand({
       console.log();
       console.log("-");
     }
+  }
+
+  // Print a small bullet-point list of versions
+  if (versions.length > 0) {
+    console.log();
+    console.log(`Versions: ${versions.map((versionInfo) => versionInfo.version).join(", ")}`);
   }
 
   return true;

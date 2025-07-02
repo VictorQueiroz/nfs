@@ -14,12 +14,7 @@ if (nfsDir !== null) {
   switch (platform) {
     case "darwin":
       if (home !== null) {
-        defaultRootDirectory = path.resolve(
-          home,
-          "Library",
-          "Application Support",
-          "nfs",
-        );
+        defaultRootDirectory = path.resolve(home, "Library", "Application Support", "nfs");
       }
       break;
     case "linux": {
@@ -57,9 +52,20 @@ const defaults: {
    * The root directory for Node.js installations.
    */
   rootDirectory: string;
+
+  /**
+   * The name of the installation.
+   */
+  installationName: string;
+
+  /**
+   * The name of the installation folder.
+   */
+  installationFolderName: string;
 } = {
-  rootDirectory:
-    defaultRootDirectory ?? path.resolve(__dirname, "../installed"),
+  installationName: "node",
+  installationFolderName: "versions",
+  rootDirectory: defaultRootDirectory ?? path.resolve(__dirname, "../installed")
 };
 
 export default defaults;

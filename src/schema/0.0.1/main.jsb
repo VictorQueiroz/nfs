@@ -1,12 +1,12 @@
+import { ConfigurationInformation, InstallationInformation } from "../traits.jsb";
+
 // The "prefix" is where the `usr`, `src`, `share`, and `lib` folders sit
 
 export type NodeVersionInstallationInformation {
-  // Name of the environment, if any
-  optional<string> name;
-  // Node.js version
-  string version;
+  NodeVersionInstallationInformationReference id;
   // Absolute path of the Node.js named environment prefix
   string location;
+  // Information used during Node.js build
   NodeVersionInstallationBuildInformation buildInformation;
 }
 
@@ -17,9 +17,19 @@ export type NodeVersionInstallationBuildInformation {
   vector<string> configureArguments;
 }
 
-export type NodeFromScratchInstallationInformation {
-  int date;
-  // A list of directories that have Node.js installations in them,
+export type NodeFromScratchInstallationConfigurationInformation : ConfigurationInformation {
+  optional<NodeVersionInstallationInformationReference> defaultInstallation;
+}
+
+export type NodeFromScratchInstallationInformation : InstallationInformation {
+  // Root directory of NFS installation
+  string location;
+  // A list of directories that a list of Node.js installation prefixes inside them,
   // marked by the presence of `data.bin` file
-  set<string> rootDirectories;
+  set<string> installRootDirectories;
+}
+
+export type NodeVersionInstallationInformationReference {
+  string name;
+  string version;
 }
