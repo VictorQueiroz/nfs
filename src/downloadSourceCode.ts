@@ -37,8 +37,6 @@ export default async function downloadSourceCode({
 
     const contentLengthValue = toValidInteger(res.headers.get("content-length"));
 
-    console.log(res);
-
     assert.strict.ok(
       contentLengthValue !== null,
       `Failed to determine archive byte length: ${downloadArchiveUrl.href}`
