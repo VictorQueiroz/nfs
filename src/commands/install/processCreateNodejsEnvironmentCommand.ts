@@ -41,9 +41,10 @@ export default async function processCreateNodejsEnvironmentCommand(
     reconfigure: getArgument(args, "--reconfigure") !== null,
     name: environmentName,
     clean: getArgument(args, "--clean") !== null,
-    install: getArgument(args, "--reinstall") !== null,
+    install: getArgument(args, "--build-only") === null,
     configure: configureArguments !== null ? { arguments: configureArguments } : null,
-    jobs
+    jobs,
+    keep: getArgument(args, "--keep") !== null
   });
 
   return true;

@@ -1,39 +1,80 @@
 import { Writable } from "node:stream";
 import { WriteStream } from "node:tty";
 
-interface IQueueItem {
+interface IQueueItemWrite {
   chunk: Uint8Array;
-  cursorTo: [number, number | undefined];
 }
 
-export default class WritableAsync {
+interface IQueueItemCursorTo {
+  cursorTo: [number] | [number, number];
+}
+interface IQueueItemMoveCursor {
+  moveCursor: [number, number];
+}
+
+interface IQueueItem extends IQueueItemWrite, IQueueItemCursorTo, IQueueItemMoveCursor {}
+
+type NullableProps<T> = { [K in keyof T]: T[K] | null };
+
+const defaultQueueItemProperties: NullableProps<IQueueItem> = {
+  cursorTo: null,
+  moveCursor: null,
+  chunk: null
+};
+
+export default class WritableAsync<T extends Writable | WriteStream> {
   readonly #writable;
-  readonly #queue = new Set<Partial<IQueueItem>>();
-  public constructor(writable: Writable | WriteStream) {
+  readonly #queue = new Set<NullableProps<IQueueItem>>();
+  public constructor(writable: T) {
     this.#writable = writable;
 
     writable.on("drain", this.#flushQueue);
   }
 
+  public destroy(err: Error | null = null) {
+    if (err !== null) {
+      this.#writable.destroy(err);
+    } else {
+      this.#writable.destroy();
+    }
+  }
+
   public end() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       this.#writable.end(() => {
         resolve();
       });
     });
   }
 
-  public cursorTo(x: number, y?: number) {
-    return new Promise<void>((resolve) => {
+  public moveCursor(dx: number, dy: number) {
+    return new Promise<void>(resolve => {
+      if (!("moveCursor" in this.#writable)) {
+        resolve();
+        return;
+      }
+      const result = this.#writable.moveCursor(dx, dy, () => {
+        resolve();
+      });
+      if (!result) {
+        this.#enqueue({ ...defaultQueueItemProperties, moveCursor: [dx, dy] });
+      }
+    });
+  }
+
+  public cursorTo(x: number, y: number | null = null) {
+    return new Promise<void>(resolve => {
       if (!("cursorTo" in this.#writable)) {
         resolve();
         return;
       }
-      const result = this.#writable.cursorTo(x, y, () => {
+      const callback = () => {
         resolve();
-      });
+      };
+      const result =
+        y === null ? this.#writable.cursorTo(x, callback) : this.#writable.cursorTo(x, y, callback);
       if (!result) {
-        this.#enqueue({ cursorTo: [x, y] });
+        this.#enqueue({ ...defaultQueueItemProperties, cursorTo: y === null ? [x] : [x, y] });
       }
     });
   }
@@ -49,13 +90,18 @@ export default class WritableAsync {
         // Remove it from the queue before we try to write it. It will be enqueued again if the write fails
         queue.delete(operation);
 
-        if ("chunk" in operation) {
+        if (operation.chunk !== null) {
           await this.#write(operation.chunk);
         }
 
-        if ("cursorTo" in operation) {
+        if (operation.cursorTo !== null) {
           const [x, y] = operation.cursorTo;
           await this.cursorTo(x, y);
+        }
+
+        if (operation.moveCursor !== null) {
+          const [x, y] = operation.moveCursor;
+          await this.moveCursor(x, y);
         }
       } catch (err) {
         console.error(
@@ -71,8 +117,8 @@ export default class WritableAsync {
     }
   };
 
-  #enqueue(op: Partial<IQueueItem>) {
-    if ("chunk" in op) {
+  #enqueue(op: NullableProps<IQueueItem>) {
+    if (op.chunk !== null) {
       const chunk = new Uint8Array(op.chunk.byteLength);
 
       // Add to queue
@@ -105,7 +151,7 @@ export default class WritableAsync {
       });
 
       if (!writeResult) {
-        this.#enqueue({ chunk: value });
+        this.#enqueue({ ...defaultQueueItemProperties, chunk: value });
       }
     });
   }

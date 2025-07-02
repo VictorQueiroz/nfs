@@ -2,28 +2,26 @@ import assert from "node:assert";
 import { ChangeObject } from "diff";
 import nativeCompiler, { CompilerLanguageType } from "../../nativeCompiler";
 import nodeInstallationPrefixDirectory from "../../nodeInstallationPrefixDirectory";
+import checkFileAccess from "../../checkFileAccess";
 
 export interface IInstallNodeVersionParams {
   rootDirectory: string;
   version: string;
   clean: boolean;
   jobs: number;
-  install: boolean;
+  install: boolean | null;
   reconfigure: boolean;
   name: string;
+  /**
+   * Keep source code after a successful installation
+   */
+  keep: boolean;
   configure: { arguments: string[] } | null;
 }
 
-export default async function installNodeVersion({
-  jobs,
-  reconfigure,
-  name,
-  rootDirectory,
-  configure,
-  install,
-  version,
-  clean
-}: IInstallNodeVersionParams) {
+export default async function installNodeVersion(params: IInstallNodeVersionParams) {
+  const { keep, jobs, reconfigure, name, rootDirectory, configure, version, clean } = params;
+
   const path = await import("node:path");
   const console = await import("node:console");
   const fs = await import("node:fs");
@@ -66,17 +64,10 @@ export default async function installNodeVersion({
   if (reconfigure) {
     needsBuildConfiguration = true;
   } else {
-    try {
-      await fs.promises.access(
-        path.resolve(extractedArchiveFolder, "out"),
-        fs.constants.R_OK | fs.constants.W_OK
-      );
-
-      needsBuildConfiguration = false;
-    } catch (reason) {
-      console.error('Failed to access "%s": %o', extractedArchiveFolder, reason);
-      needsBuildConfiguration = true;
-    }
+    needsBuildConfiguration = await checkFileAccess(
+      path.resolve(extractedArchiveFolder, "out"),
+      fs.constants.R_OK | fs.constants.W_OK
+    );
   }
 
   const decodedNodeVersionInstallInformation = NodeVersionInstallationInformation({
@@ -110,14 +101,14 @@ export default async function installNodeVersion({
     );
     console.log();
 
-    const objectChanges = await (async (info) =>
-      new Promise<ChangeObject<string>[]>((resolve) =>
+    const objectChanges = await (async info =>
+      new Promise<ChangeObject<string>[]>(resolve =>
         diff.diffJson(
           // Default info contains the new build configure arguments.
           decodedNodeVersionInstallInformation,
           info,
           {
-            callback: (result) => {
+            callback: result => {
               resolve(result);
             }
           }
@@ -142,6 +133,7 @@ export default async function installNodeVersion({
     CC: ["ccache", (await nativeCompiler(CompilerLanguageType.C)).executable],
     CXX: ["ccache", (await nativeCompiler(CompilerLanguageType.CXX)).executable]
   });
+  const chalk = (await import("chalk")).default;
 
   if (clean) {
     await spawn("make", ["clean"], { log: true, cwd: extractedArchiveFolder }).wait();
@@ -161,7 +153,47 @@ export default async function installNodeVersion({
 
   const compileMakeArguments = new Array<string>();
 
-  if (install) {
+  const isNodeBinaryPresent = await checkFileAccess(
+    path.resolve(prefixDirectory, "bin", "node"),
+    fs.constants.X_OK | fs.constants.R_OK
+  );
+
+  let { install } = params;
+
+  {
+    install =
+      /**
+       * If the `install` argument is set, leave it as is
+       */
+      install ??
+      /**
+       * If `install` is `null`, set `install` to `true` if any of the following is true:
+       */
+      /**
+       * The build needs to be configured
+       */
+      (needsBuildConfiguration ||
+        /**
+         * The `node` binary is not present
+         */
+        !isNodeBinaryPresent);
+
+    /**
+     * If the Node.js binary is not installed, and the initial `install` argument is set to `false`,
+     * warn the user.
+     */
+    if (!isNodeBinaryPresent && !install) {
+      console.warn(
+        chalk.yellow(
+          "The Node.js binary is not installed, and the `install` argument is set to `false`. " +
+            "The Node.js version will not be installed."
+        )
+      );
+      console.log();
+    }
+  }
+
+  if (jobs > 0) {
     compileMakeArguments.push("--jobs", `${jobs}`);
   }
 
@@ -170,11 +202,21 @@ export default async function installNodeVersion({
     env: environmentVariables,
     cwd: extractedArchiveFolder
   }).wait();
+  console.log();
 
   if (install) {
     await spawn("make", ["install"], {
+      log: true,
       env: environmentVariables,
       cwd: extractedArchiveFolder
     }).wait();
+    console.log(chalk.green(`Successfully installed Node.js version ${version}`));
   }
+
+  if (!keep) {
+    console.log(chalk.yellow(`Removing source code...`));
+    await fs.promises.rm(extractedArchiveFolder, { recursive: true });
+  }
+
+  console.log(chalk.green(`Done.`));
 }

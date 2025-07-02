@@ -2,11 +2,8 @@ import path from "node:path";
 import assert from "node:assert";
 import persistentLocalInstallationInformation from "./persistentLocalInstallationInformation";
 import persistentDirectoryData from "./persistentDirectoryData";
-import {
-  decodeNodeVersionInstallationInformation,
-  encodeNodeVersionInstallationInformation,
-  NodeVersionInstallationInformation
-} from "../schema/0.0.1/main.jsb";
+import type { NodeVersionInstallationInformation } from "../schema/0.0.1/main.jsb";
+import checkFileAccess from "./checkFileAccess";
 
 export interface IFindNodeInstallInformationParams {
   version: string | null;
@@ -19,6 +16,8 @@ export default async function findNodeInstallInformation(
 ) {
   const semver = await import("semver");
   const fs = await import("node:fs");
+  const { decodeNodeVersionInstallationInformation, encodeNodeVersionInstallationInformation } =
+    await import("../schema/0.0.1/main.jsb");
 
   const installedVersionMatches = new Set<NodeVersionInstallationInformation>();
 
@@ -28,10 +27,7 @@ export default async function findNodeInstallInformation(
 
   // Find a version that intersects with the specified version
   for (const prefixDirectory of Array.from(nfsInstallInfo.installRootDirectories)) {
-    try {
-      await fs.promises.access(prefixDirectory, fs.constants.R_OK | fs.constants.W_OK);
-    } catch (err) {
-      console.error('Failed to access "%s": %o', prefixDirectory, err);
+    if (!(await checkFileAccess(prefixDirectory, fs.constants.R_OK | fs.constants.W_OK))) {
       continue;
     }
     for await (const versionRootDirectory of fs.promises.glob([
@@ -39,13 +35,12 @@ export default async function findNodeInstallInformation(
     ])) {
       // const installDirectory = path.resolve(prefixDirectory, directoryName);
 
-      try {
-        await fs.promises.access(
+      if (
+        !(await checkFileAccess(
           path.resolve(versionRootDirectory, "data.bin"),
           fs.constants.R_OK | fs.constants.W_OK
-        );
-      } catch (reason) {
-        console.error('Failed to access "%s": %o', versionRootDirectory, reason);
+        ))
+      ) {
         continue;
       }
 

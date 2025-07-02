@@ -33,3 +33,22 @@ export type NodeVersionInstallationInformationReference {
   string name;
   string version;
 }
+
+export type NodeVersion {
+  string version;
+  string date;
+  string npm;
+  string v8;
+  string uv;
+  string zlib;
+  string openssl;
+  string modules;
+  boolean lts;
+  boolean security;
+  vector<string> files;
+}
+
+export type AvailableVersionList {
+  vector<NodeVersion> versions;
+}
+

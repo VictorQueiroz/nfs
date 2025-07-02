@@ -1,4 +1,5 @@
 import environmentVariable from "./environmentVariable";
+import log, { LogLevel } from "./log";
 
 export default async function which(cmd: string) {
   const PATH = environmentVariable("PATH");
@@ -20,7 +21,9 @@ export default async function which(cmd: string) {
 
       return absolutePath;
     } catch (err) {
-      console.error('Failed to access "%s": %o', absolutePath, err);
+      log(LogLevel.Verbose, () => {
+        console.error('Failed to access "%s": %o', absolutePath, err);
+      });
     }
   }
 
