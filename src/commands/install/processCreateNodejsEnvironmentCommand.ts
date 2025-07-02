@@ -35,13 +35,12 @@ export default async function processCreateNodejsEnvironmentCommand(
     getArgumentAssignment(args, "-j", getInteger) ??
     1;
 
-  const clean = getArgument(args, "--clean") !== null;
-
   await installNodeVersion({
     rootDirectory,
     version,
+    reconfigure: getArgument(args, "--reconfigure") !== null,
     name: environmentName,
-    clean,
+    clean: getArgument(args, "--clean") !== null,
     install: getArgument(args, "--reinstall") !== null,
     configure: configureArguments !== null ? { arguments: configureArguments } : null,
     jobs

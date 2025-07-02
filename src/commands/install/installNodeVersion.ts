@@ -9,12 +9,14 @@ export interface IInstallNodeVersionParams {
   clean: boolean;
   jobs: number;
   install: boolean;
+  reconfigure: boolean;
   name: string;
   configure: { arguments: string[] } | null;
 }
 
 export default async function installNodeVersion({
   jobs,
+  reconfigure,
   name,
   rootDirectory,
   configure,
@@ -68,17 +70,20 @@ export default async function installNodeVersion({
   ];
 
   let needsBuildConfiguration: boolean;
-
-  try {
-    await fs.promises.access(
-      path.resolve(extractedArchiveFolder, "out"),
-      fs.constants.R_OK | fs.constants.W_OK
-    );
-
-    needsBuildConfiguration = false;
-  } catch (reason) {
-    console.error('Failed to access "%s": %o', extractedArchiveFolder, reason);
+  if (reconfigure) {
     needsBuildConfiguration = true;
+  } else {
+    try {
+      await fs.promises.access(
+        path.resolve(extractedArchiveFolder, "out"),
+        fs.constants.R_OK | fs.constants.W_OK
+      );
+
+      needsBuildConfiguration = false;
+    } catch (reason) {
+      console.error('Failed to access "%s": %o', extractedArchiveFolder, reason);
+      needsBuildConfiguration = true;
+    }
   }
 
   const decodedNodeVersionInstallInformation = NodeVersionInstallationInformation({
@@ -161,7 +166,13 @@ export default async function installNodeVersion({
     );
   }
 
-  await spawn("make", ["VERBOSE=1", "--jobs", `${jobs}`], {
+  const compileMakeArguments = new Array<string>();
+
+  if (install) {
+    compileMakeArguments.push("--jobs", `${jobs}`);
+  }
+
+  await spawn("make", ["VERBOSE=1", ...compileMakeArguments], {
     log: true,
     env: environmentVariables,
     cwd: extractedArchiveFolder
