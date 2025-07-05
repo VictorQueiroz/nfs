@@ -1,6 +1,13 @@
 import environmentVariable from "./environmentVariable";
 import log, { LogLevel } from "./log";
 
+/**
+ * Searches for a command in the PATH environment variable.
+ *
+ * @param {string} cmd - The command to search for.
+ * @returns {Promise<string>} The absolute path to the command.
+ * @throws {Error} If the command is not found in the PATH.
+ */
 export default async function which(cmd: string) {
   const PATH = environmentVariable("PATH");
 

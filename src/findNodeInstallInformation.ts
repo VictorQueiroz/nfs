@@ -6,6 +6,14 @@ import type { NodeVersionInstallationInformation } from "../schema/0.0.1/main.js
 import checkFileAccess from "./checkFileAccess";
 import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
 
+/**
+ * Finds all Node.js versions installed under the root directory that match the provided version
+ * and environment name.
+ * @param rootDirectory The root directory to search for Node.js versions in.
+ * @param environmentInfo The environment information to filter versions by.
+ * @returns A set of all matching Node.js versions. If no matching versions are found, an empty set
+ * is returned.
+ */
 export default async function findNodeInstallInformation(
   rootDirectory: string,
   { version, environmentName }: IInputNodeEnvironmentInformation

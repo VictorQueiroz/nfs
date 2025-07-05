@@ -26,7 +26,7 @@ export default async function processSetDefaultVersionCommand({
 }: {
   rootDirectory: string;
   version: SetDefaultVersionCommand;
-}) {
+}): Promise<string | null> {
   const environmentVariables = new Map<string, string>();
   const defaults = (await import("../../config")).default;
   let writeNfsCommand: ((cs: TextStream) => void) | null;
@@ -52,7 +52,7 @@ export default async function processSetDefaultVersionCommand({
       );
 
       writeNfsCommand = cs => {
-        cs.write(`nfs use ${versionInfo.id.name} ${versionInfo.id.version}\n`);
+        cs.write(`eval "$(nfs use '${versionInfo.id.name}' '${versionInfo.id.version}')"\n`);
       };
       break;
     }
@@ -62,7 +62,7 @@ export default async function processSetDefaultVersionCommand({
       environmentVariables.set(defaults.environmentVariableNames.defaultNodeEnvironmentName, "");
 
       writeNfsCommand = cs => {
-        cs.write("nfs use system\n");
+        cs.write('eval "$(nfs use system)"\n');
       };
       break;
     }

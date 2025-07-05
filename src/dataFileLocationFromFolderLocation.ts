@@ -1,6 +1,13 @@
 import assert from "node:assert";
 
-export default async function dataFileLocationFromFolderLocation(location: string) {
+/**
+ * @param {string} location
+ * @returns {Promise<string>} The path to a "data.bin" file inside the given location.
+ * Creates the location if it doesn't exist, and throws an error if the location is not a directory.
+ */
+export default async function dataFileLocationFromFolderLocation(
+  location: string
+): Promise<string> {
   const fs = await import("node:fs");
   const path = await import("node:path");
   const checkFileAccess = (await import("./checkFileAccess")).default;

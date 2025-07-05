@@ -11,6 +11,13 @@ export interface ICreateEnvironmentParams {
   environmentInformation: INodeEnvironmentInformation;
 }
 
+/**
+ * Process the `create` command.
+ *
+ * @param args The command line arguments.
+ * @param params The parameters of the command.
+ * @returns `true` if the command was executed successfully.
+ */
 export default async function processCreateNodejsEnvironmentCommand(
   args: string[],
   params: ICreateEnvironmentParams

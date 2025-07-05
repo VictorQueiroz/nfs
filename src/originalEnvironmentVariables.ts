@@ -5,6 +5,16 @@ export interface INodeVersionEnvironmentVariables {
   MANPATH: string[];
 }
 
+/**
+ * Returns the original environment variables without any NodeFromScratch prefixes.
+ *
+ * This is done by removing all prefixes from the current environment variables that are
+ * also present in the installation information.
+ *
+ * @param rootDirectory The root directory where all the Node.js versions are installed.
+ *
+ * @returns The original environment variables without any NodeFromScratch prefixes.
+ */
 export default async function originalEnvironmentVariables({
   rootDirectory
 }: {

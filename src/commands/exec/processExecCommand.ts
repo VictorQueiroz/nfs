@@ -2,6 +2,15 @@ import assert from "node:assert";
 import getInstallationEnvironmentVariables from "../../getInstallationEnvironmentVariables";
 import getEnvironmentInformationFromArguments from "../../getEnvironmentInformationFromArguments";
 
+/**
+ * Run a command with the environment variables of the specified Node.js environment.
+ *
+ * @param args The command line arguments.
+ * @param index The index of the first argument to be passed to the command.
+ * @param rootDirectory The root directory where all the Node.js versions are installed.
+ *
+ * @returns `true` if the command was executed successfully.
+ */
 export default async function processExecCommand({
   args,
   rootDirectory,

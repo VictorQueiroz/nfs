@@ -1,6 +1,14 @@
 import assert from "node:assert";
 import toValidInteger from "./toValidInteger";
 
+/**
+ * Download the Node.js source code for the given version.
+ *
+ * @param {object} opts
+ * @param {string} opts.prefixDirectory The directory where the source code will be placed.
+ * @param {string} opts.version The version of Node.js to download.
+ * @returns {Promise<{ extractedArchiveFolder: string }>}
+ */
 export default async function downloadSourceCode({
   prefixDirectory,
   version
@@ -84,7 +92,7 @@ export default async function downloadSourceCode({
     (({ existingArchive }) => {
       let downloadedByteCount = existingArchive.currentByteLength;
 
-      body.on("data", (chunk) => {
+      body.on("data", chunk => {
         assert.strict.ok(chunk instanceof Uint8Array);
 
         downloadedByteCount += chunk.length;

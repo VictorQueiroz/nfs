@@ -10,6 +10,16 @@ import originalEnvironmentVariables, {
 import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
 import log from "./log";
 
+/**
+ * Retrieves the environment variables for a specific Node.js installation,
+ * given the root directory for the Node.js installation and the information
+ * about the environment to install.
+ *
+ * @param rootDirectory The root directory for the Node.js installation.
+ * @param environmentInfo The information about the environment to install.
+ * @returns The environment variables for the Node.js installation, or null
+ * if no environment variables could be found.
+ */
 export default async function getInstallationEnvironmentVariables(
   rootDirectory: string,
   environmentInfo: IInputNodeEnvironmentInformation

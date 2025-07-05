@@ -19,6 +19,25 @@ export interface IInstallNodeVersionParams {
   configure: { arguments: string[] } | null;
 }
 
+/**
+ * Install a Node.js version.
+ *
+ * @param {IInstallNodeVersionParams} params
+ * @param {string} params.version - The version of Node.js to install.
+ * @param {boolean} [params.clean=false] - If true, remove the build directory before building.
+ * @param {string} [params.configure] - Arguments to pass to the `./configure` script. If not provided,
+ *   the default arguments will be used.
+ * @param {number} [params.jobs=0] - The number of jobs to run in parallel. If 0, use the default
+ *   number of jobs.
+ * @param {boolean} [params.reconfigure=false] - If true, reconfigure the build even if the
+ *   configuration is already up-to-date.
+ * @param {string} [params.keep=false] - If true, keep the source code after a successful
+ *   installation.
+ * @param {string} params.name - The name of the Node.js environment.
+ * @param {string} params.rootDirectory - The root directory of the Node.js installation.
+ *
+ * @returns {Promise<void>}
+ */
 export default async function installNodeVersion(params: IInstallNodeVersionParams) {
   const { keep, jobs, reconfigure, name, rootDirectory, configure, version, clean } = params;
 

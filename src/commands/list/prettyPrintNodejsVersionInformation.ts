@@ -12,23 +12,16 @@ export interface INodeVersionInfo {
   security: boolean;
 }
 
-export default async function prettyPrintNodejsVersionInformation(
-  versionInfo: INodeVersionInfo,
-) {
+/**
+ * Prints a nicely formatted string with information about a given Node.js version.
+ *
+ * @param {INodeVersionInfo} versionInfo - The information about the Node.js version to be printed.
+ *
+ * @returns {Promise<void>} - A promise that resolves when all the information has been printed.
+ */
+export default async function prettyPrintNodejsVersionInformation(versionInfo: INodeVersionInfo) {
   const chalk = (await import("chalk")).default;
-  const {
-    version,
-    date,
-    files,
-    npm,
-    v8,
-    uv,
-    zlib,
-    openssl,
-    modules,
-    lts,
-    security,
-  } = versionInfo;
+  const { version, date, files, npm, v8, uv, zlib, openssl, modules, lts, security } = versionInfo;
 
   console.log(chalk.bold.cyan(`\nNode.js Version ${version}`));
   console.log(chalk.gray(`Released on ${date}`));
@@ -49,12 +42,9 @@ export default async function prettyPrintNodejsVersionInformation(
   printField("OpenSSL", openssl);
   printField("Modules", modules);
   printField("Files", files);
-  printField(
-    "LTS",
-    lts ? chalk.bgGreen.black(" YES ") : chalk.bgRed.white(" NO "),
-  );
+  printField("LTS", lts ? chalk.bgGreen.black(" YES ") : chalk.bgRed.white(" NO "));
   printField(
     "Security Fix",
-    security ? chalk.bgGreen.black(" YES ") : chalk.bgYellow.black(" NO "),
+    security ? chalk.bgGreen.black(" YES ") : chalk.bgYellow.black(" NO ")
   );
 }

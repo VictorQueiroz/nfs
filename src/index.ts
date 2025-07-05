@@ -8,12 +8,15 @@ import {
 } from "../schema/0.0.1/main.jsb";
 import resolveVersion from "./resolveVersion";
 import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
-import { SetDefaultVersionCommandType } from "./commands/set/processSetDefaultVersionCommand";
+import processSetDefaultVersionCommand, {
+  SetDefaultVersionCommandType
+} from "./commands/set/processSetDefaultVersionCommand";
 import parseSetCommandKeyFromString, {
   SetCommandKey
 } from "./commands/set/parseSetCommandKeyFromString";
 import originalEnvironmentVariables from "./originalEnvironmentVariables";
 import printActivationShellScript from "./printActivationShellScript";
+import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation";
 
 // TODO: Add support for running certains patches before compiling again
 
@@ -53,6 +56,30 @@ import printActivationShellScript from "./printActivationShellScript";
       nfsLocalInfo !== null,
       `Failed to create installation information on disk: ${rootDirectory}`
     );
+
+    const environmentFile = await processSetDefaultVersionCommand({
+      rootDirectory,
+      version: { type: SetDefaultVersionCommandType.System }
+    });
+
+    assert.strict.ok(
+      environmentFile !== null,
+      `Failed to set default version on disk: ${rootDirectory}`
+    );
+
+    // Installation: Instruct the user to add the following to his shell
+    const chalk = (await import("chalk")).default;
+
+    // Step 1: Add the following to your .bashrc or .zshrc:
+    console.log(
+      `# ${chalk.yellow(`Make sure you have the following at the end of your .bashrc or .zshrc:`)}`
+    );
+    console.log(
+      chalk.gray(
+        `# ${chalk.bold.cyan(`source "${chalk.bold.white(rootDirectory)}/environment.sh"`)}`
+      )
+    );
+    console.log();
   }
 
   const printRootDirectory = getArgument(args, "root");
@@ -127,12 +154,37 @@ import printActivationShellScript from "./printActivationShellScript";
   const containsUseCommand = getArgument(args, "use");
 
   if (containsUseCommand !== null) {
+    const processUseCommand = (await import("./processUseCommand")).default;
+
+    if (!args.length) {
+      const fallbackNodeInstallation = await findSingleNodeInstallInformation(rootDirectory, {
+        environmentName: null,
+        version: null,
+        lts: null
+      });
+
+      if (fallbackNodeInstallation !== null) {
+        await processUseCommand(rootDirectory, {
+          environmentName: fallbackNodeInstallation.id.name,
+          version: fallbackNodeInstallation.id.version,
+          lts: null
+        });
+        return;
+      }
+
+      const chalk = (await import("chalk")).default;
+
+      // Print a shell script that prints a red error on screen when the shell script is executed
+      console.log(`printf '${chalk.red(`Could not find any Node.js installation.`)}';\n`);
+      await printActivationShellScript(await originalEnvironmentVariables({ rootDirectory }));
+      return;
+    }
+
     if (args[containsUseCommand.index] === "system") {
       await printActivationShellScript(await originalEnvironmentVariables({ rootDirectory }));
       return;
     }
 
-    const processUseCommand = (await import("./processUseCommand")).default;
     const getEnvironmentInformationFromArguments = (
       await import("./getEnvironmentInformationFromArguments")
     ).default;
