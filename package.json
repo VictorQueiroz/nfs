@@ -40,11 +40,11 @@
     "email": "victorcqueirozg@gmail.com"
   },
   "bin": {
-    "nfs": "./src/index.js"
+    "nfs": "src/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/VictorQueiroz/nfs.git"
+    "url": "git+https://github.com/VictorQueiroz/nfs.git"
   },
   "license": "MIT",
   "description": "Node.js version manager with support for compiling its source code from scratch with custom parameters.",
