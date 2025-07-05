@@ -32,7 +32,13 @@ export default async function processExecCommand({
   const { spawn } = await import("node:child_process");
 
   const child = spawn(command, line.slice(1), {
-    env: { ...process.env, ...environmentVariables },
+    env: {
+      ...process.env,
+      ...Object.entries(environmentVariables).reduce<Record<string, string>>(
+        (acc, [key, value]) => ({ ...acc, [key]: value }),
+        {}
+      )
+    },
     stdio: "inherit"
   });
 

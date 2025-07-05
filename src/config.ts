@@ -1,6 +1,7 @@
 import path from "node:path";
 import process from "node:process";
 import os from "node:os";
+import assert from "node:assert";
 
 let defaultRootDirectory: string | null = null;
 
@@ -41,9 +42,7 @@ if (nfsDir !== null) {
     case "sunos":
     case "cygwin":
     case "netbsd":
-      console.error(`Platform "${platform}" is not supported`);
-      process.exitCode = 1;
-      break;
+      assert.strict.fail(`Platform "${platform}" is not supported`);
   }
 }
 
@@ -62,10 +61,21 @@ const defaults: {
    * The name of the installation folder.
    */
   installationFolderName: string;
+
+  environmentVariableNames: {
+    defaultNodeEnvironmentName: string;
+    defaultNodeVersion: string;
+    defaultLongTermSupport: string;
+  };
 } = {
   installationName: "node",
   installationFolderName: "versions",
-  rootDirectory: defaultRootDirectory ?? path.resolve(__dirname, "../installed")
+  rootDirectory: defaultRootDirectory ?? path.resolve(__dirname, "../installed"),
+  environmentVariableNames: {
+    defaultNodeEnvironmentName: "NFS_DEFAULT_NODE_ENVIRONMENT_NAME",
+    defaultNodeVersion: "NFS_DEFAULT_NODE_VERSION",
+    defaultLongTermSupport: "NFS_DEFAULT_NODE_LTS"
+  }
 };
 
 export const logLevelEnvironmentVariableName = "NFS_LOG_LEVEL";

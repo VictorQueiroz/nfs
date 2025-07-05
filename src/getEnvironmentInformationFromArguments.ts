@@ -1,15 +1,44 @@
 import assert from "node:assert";
 
-export interface INodeEnvironmentInformation {
+export interface IInputNodeEnvironmentInformation {
   environmentName: string;
   version: string | null;
   lts: boolean | null;
 }
 
+export interface INodeEnvironmentInformation {
+  environmentName: string;
+  version: string;
+  lts: boolean;
+}
+
+/**
+ * Returns an object containing environment information from CLI arguments.
+ *
+ * `startIndex` is the starting index in the `args` array where the environment
+ * information should be extracted from.
+ *
+ * The function will return an object with the following properties:
+ *
+ * - `lts`: Whether the installation should be an LTS version or not.
+ * - `environmentName`: The name of the environment.
+ * - `version`: The version of Node.js to install.
+ *
+ * If `version` is not specified, the function will get the next available argument
+ * from the `args` array.
+ *
+ * If `version` is not valid, the function will return `null`.
+ *
+ * @param {string[]} args - The CLI arguments.
+ * @param {number} startIndex - The starting index in the `args` array where the environment
+ * information should be extracted from.
+ * @returns {Promise<IInputNodeEnvironmentInformation | null>} An object containing environment
+ * information, or `null` if the version is not valid.
+ */
 export default async function getEnvironmentInformationFromArguments(
   args: string[],
   startIndex: number
-): Promise<INodeEnvironmentInformation> {
+): Promise<IInputNodeEnvironmentInformation> {
   const { getString } = await import("cli-argument-helper/string");
   const defaults = (await import("./config")).default;
   const { getArgument } = await import("cli-argument-helper");

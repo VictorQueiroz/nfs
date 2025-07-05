@@ -1,7 +1,14 @@
 import assert from "node:assert";
-import { INodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
 
-export default async function resolveVersion(environmentInfo: INodeEnvironmentInformation) {
+/**
+ * Resolves the version based on the `--lts` flag and the version from the command line.
+ * If no version is provided, finds the latest version available.
+ * If `--lts` is provided, the latest LTS version is used.
+ * @param environmentInfo The parsed command line arguments with the environment information.
+ * @returns The resolved version.
+ */
+export default async function resolveVersion(environmentInfo: IInputNodeEnvironmentInformation) {
   const semver = await import("semver");
   const sortVersionList = (await import("./commands/list/sortVersionList")).default;
   const listNodejsVersions = (await import("./commands/list/listNodejsVersions")).default;
@@ -9,7 +16,7 @@ export default async function resolveVersion(environmentInfo: INodeEnvironmentIn
   let { version } = environmentInfo;
   const { lts } = environmentInfo;
 
-  const versionList = (await sortVersionList(await listNodejsVersions())).filter((versionInfo) =>
+  const versionList = (await sortVersionList(await listNodejsVersions())).filter(versionInfo =>
     // If `--lts` is provided, filter out versions that are not LTS
     lts !== null ? versionInfo.lts === lts : true
   );
@@ -28,7 +35,7 @@ export default async function resolveVersion(environmentInfo: INodeEnvironmentIn
   assert.strict.ok(version !== null, `Failed to get version from arguments`);
 
   const matchedVersionInfo =
-    versionList.find((versionInfo) => semver.satisfies(versionInfo.version, version)) ?? null;
+    versionList.find(versionInfo => semver.satisfies(versionInfo.version, version)) ?? null;
 
   assert.strict.ok(matchedVersionInfo !== null, `Failed to get version: ${version}`);
 

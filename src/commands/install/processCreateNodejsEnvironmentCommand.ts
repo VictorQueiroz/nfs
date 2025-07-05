@@ -1,32 +1,24 @@
-import assert from "node:assert";
 import getIndexBasedArgumentSequence from "../../getIndexBasedArgumentSequence";
 import getArgumentAssignment from "cli-argument-helper/getArgumentAssignment";
 import { getInteger } from "cli-argument-helper/number";
 import { getArgument } from "cli-argument-helper";
 import installNodeVersion from "./installNodeVersion";
-import findNodeInstallInformation from "../../findNodeInstallInformation";
+import { INodeEnvironmentInformation } from "../../getEnvironmentInformationFromArguments";
+import findSingleNodeInstallInformation from "../../findSingleNodeInstallInformation";
 
 export interface ICreateEnvironmentParams {
   rootDirectory: string;
-  environmentName: string;
-  version: string;
+  environmentInformation: INodeEnvironmentInformation;
 }
 
 export default async function processCreateNodejsEnvironmentCommand(
   args: string[],
   params: ICreateEnvironmentParams
 ): Promise<boolean> {
-  const { rootDirectory, environmentName, version } = params;
+  const { rootDirectory, environmentInformation } = params;
 
   // Handle potentially new Node.js installation
-  const inputInstallInformationList = Array.from(
-    await findNodeInstallInformation(rootDirectory, { environmentName, version })
-  );
-
-  assert.strict.ok(
-    inputInstallInformationList.length <= 1,
-    `Multiple node versions match name and version: ${environmentName} ${version}`
-  );
+  await findSingleNodeInstallInformation(rootDirectory, environmentInformation);
 
   const configureArguments = getIndexBasedArgumentSequence(args, "--configure", ";");
 
@@ -37,9 +29,9 @@ export default async function processCreateNodejsEnvironmentCommand(
 
   await installNodeVersion({
     rootDirectory,
-    version,
+    version: environmentInformation.version,
     reconfigure: getArgument(args, "--reconfigure") !== null,
-    name: environmentName,
+    name: environmentInformation.environmentName,
     clean: getArgument(args, "--clean") !== null,
     install: getArgument(args, "--build-only") === null,
     configure: configureArguments !== null ? { arguments: configureArguments } : null,

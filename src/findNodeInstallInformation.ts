@@ -4,15 +4,11 @@ import persistentLocalInstallationInformation from "./persistentLocalInstallatio
 import persistentDirectoryData from "./persistentDirectoryData";
 import type { NodeVersionInstallationInformation } from "../schema/0.0.1/main.jsb";
 import checkFileAccess from "./checkFileAccess";
-
-export interface IFindNodeInstallInformationParams {
-  version: string | null;
-  environmentName: string | null;
-}
+import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
 
 export default async function findNodeInstallInformation(
   rootDirectory: string,
-  { version, environmentName }: IFindNodeInstallInformationParams
+  { version, environmentName }: IInputNodeEnvironmentInformation
 ) {
   const semver = await import("semver");
   const fs = await import("node:fs");

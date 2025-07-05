@@ -1,44 +1,22 @@
-import assert from "node:assert";
-import persistentLocalInstallationInformation from "./persistentLocalInstallationInformation";
 import {
   decodeNodeVersionInstallationInformation,
   encodeNodeVersionInstallationInformation
 } from "../schema/0.0.1/main.jsb";
 import persistentDirectoryData from "./persistentDirectoryData";
 import findNodeInstallInformation from "./findNodeInstallInformation";
+import originalEnvironmentVariables, {
+  INodeVersionEnvironmentVariables
+} from "./originalEnvironmentVariables";
+import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import log from "./log";
 
 export default async function getInstallationEnvironmentVariables(
   rootDirectory: string,
-  environmentInfo: { version: string | null; environmentName: string | null }
-) {
-  const process = await import("node:process");
+  environmentInfo: IInputNodeEnvironmentInformation
+): Promise<INodeVersionEnvironmentVariables | null> {
   const path = await import("node:path");
 
-  const { PATH = null, MANPATH = null } = process.env;
-
-  const transformedEnvironmentVariables = {
-    PATH: [...(PATH?.split(":") ?? [])],
-    MANPATH: [...(MANPATH?.split(":") ?? [])]
-  };
-
-  const nfsInstallInfo = await persistentLocalInstallationInformation(rootDirectory).decode(null);
-
-  assert.strict.ok(nfsInstallInfo !== null, `Failed to decode installation information`);
-
-  // Remove old prefixes from environment variables
-  for (const [, value] of Object.entries(transformedEnvironmentVariables)) {
-    for (const prefix of nfsInstallInfo.installRootDirectories) {
-      for (let i = 0; i < value.length; i++) {
-        const environmentVariableItem = value[i] ?? null;
-        assert.strict.ok(environmentVariableItem !== null, `Environment variable item is null`);
-        if (environmentVariableItem.startsWith(prefix)) {
-          value.splice(i, 1);
-          i--;
-        }
-      }
-    }
-  }
-
+  // Get version install information
   const targetInstallInformationList = await findNodeInstallInformation(
     rootDirectory,
     environmentInfo
@@ -65,10 +43,15 @@ export default async function getInstallationEnvironmentVariables(
   ).decode(null);
 
   if (existingInstallInfoHandle === null) {
-    console.error(`No installation found for ${targetInstallInformation.id.version}`);
-    process.exitCode = 1;
+    log.verbose(() => {
+      console.error(
+        `Failed to decode Node.js installation information: ${Object.values(targetInstallInformation.id)}`
+      );
+    });
     return null;
   }
+
+  const transformedEnvironmentVariables = await originalEnvironmentVariables({ rootDirectory });
 
   // Add new values
   transformedEnvironmentVariables.PATH.unshift(
@@ -78,8 +61,6 @@ export default async function getInstallationEnvironmentVariables(
   transformedEnvironmentVariables.MANPATH.unshift(
     path.resolve(existingInstallInfoHandle.location, "share/man")
   );
-  return {
-    PATH: transformedEnvironmentVariables.PATH.join(":"),
-    MANPATH: transformedEnvironmentVariables.MANPATH.join(":")
-  };
+
+  return transformedEnvironmentVariables;
 }

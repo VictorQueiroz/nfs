@@ -25,3 +25,7 @@ export default function log(level: number, fn: () => void) {
     fn();
   }
 }
+
+log.verbose = (fn: () => void) => log(LogLevel.Verbose, fn);
+log.info = (fn: () => void) => log(LogLevel.Info, fn);
+log.warning = (fn: () => void) => log(LogLevel.Warning, fn);

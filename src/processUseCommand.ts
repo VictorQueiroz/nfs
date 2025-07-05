@@ -1,9 +1,18 @@
 import assert from "node:assert";
-import { INodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import printActivationShellScript from "./printActivationShellScript";
 
+/**
+ * Use a specific Node.js version.
+ *
+ * @param rootDirectory The root directory where all the Node.js versions are installed.
+ * @param envInfo The environment information of the Node.js version to use.
+ *
+ * @returns `true` if the command was executed successfully.
+ */
 export default async function processUseCommand(
   rootDirectory: string,
-  envInfo: INodeEnvironmentInformation
+  envInfo: IInputNodeEnvironmentInformation
 ) {
   const getInstallationEnvironmentVariables = (
     await import("./getInstallationEnvironmentVariables")
@@ -12,19 +21,7 @@ export default async function processUseCommand(
 
   assert.strict.ok(environmentVariables !== null, `Failed to get environment variables`);
 
-  const { TextStream } = await import("@textstream/core");
-  const stream = await import("node:stream");
-  const process = await import("node:process");
-  const cs = new TextStream();
-
-  for (const [key, value] of Object.entries(environmentVariables)) {
-    cs.write(`${key}=${value}\n`);
-  }
-
-  await stream.promises.pipeline(
-    stream.PassThrough.from([new TextEncoder().encode(cs.value())]),
-    process.stdout
-  );
+  await printActivationShellScript(environmentVariables);
 
   return true;
 }

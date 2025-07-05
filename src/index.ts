@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 
 import assert from "node:assert";
-import findNodeInstallInformation from "./findNodeInstallInformation";
 import persistentLocalInstallationInformation from "./persistentLocalInstallationInformation";
 import {
   defaultNodeFromScratchInstallationInformation,
   NodeFromScratchInstallationInformation
 } from "../schema/0.0.1/main.jsb";
 import resolveVersion from "./resolveVersion";
+import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import { SetDefaultVersionCommandType } from "./commands/set/processSetDefaultVersionCommand";
+import parseSetCommandKeyFromString, {
+  SetCommandKey
+} from "./commands/set/parseSetCommandKeyFromString";
+import originalEnvironmentVariables from "./originalEnvironmentVariables";
+import printActivationShellScript from "./printActivationShellScript";
 
 // TODO: Add support for running certains patches before compiling again
 
 (async () => {
-  const process = await import("node:process");
   const path = await import("node:path");
+  const process = await import("node:process");
   const { getArgument } = await import("cli-argument-helper");
   const { getString } = await import("cli-argument-helper/string");
   const getArgumentAssignment = (await import("cli-argument-helper/getArgumentAssignment")).default;
@@ -49,6 +55,13 @@ import resolveVersion from "./resolveVersion";
     );
   }
 
+  const printRootDirectory = getArgument(args, "root");
+
+  if (printRootDirectory !== null) {
+    process.stdout.write(rootDirectory);
+    return;
+  }
+
   const exec = getArgument(args, "exec");
 
   if (exec !== null) {
@@ -58,31 +71,89 @@ import resolveVersion from "./resolveVersion";
     return;
   }
 
+  const setCommandArg = getArgument(args, "set");
+
+  if (setCommandArg !== null) {
+    const unprocessedKey = getString(args, setCommandArg.index);
+
+    const key = parseSetCommandKeyFromString(unprocessedKey);
+
+    assert.strict.ok(key !== null, `Unknown set command key: ${unprocessedKey}`);
+
+    switch (key) {
+      case SetCommandKey.DefaultVersion: {
+        const processSetDefaultVersionCommand = (
+          await import("./commands/set/processSetDefaultVersionCommand")
+        ).default;
+
+        const isSystem = args[setCommandArg.index] === "system";
+        let environmentInfo: IInputNodeEnvironmentInformation | null;
+
+        if (isSystem) {
+          getString(args, 1);
+
+          environmentInfo = null;
+        } else {
+          const getEnvironmentInformationFromArguments = (
+            await import("./getEnvironmentInformationFromArguments")
+          ).default;
+
+          environmentInfo = await getEnvironmentInformationFromArguments(args, setCommandArg.index);
+        }
+
+        const environmentFile = await processSetDefaultVersionCommand({
+          rootDirectory,
+          version:
+            environmentInfo === null
+              ? { type: SetDefaultVersionCommandType.System }
+              : {
+                  type: SetDefaultVersionCommandType.Specific,
+                  nodeEnvironmentInformation: {
+                    environmentName: environmentInfo.environmentName,
+                    version: environmentInfo.version,
+                    lts: environmentInfo.lts
+                  }
+                }
+        });
+        assert.strict.ok(environmentFile !== null, "Failed to set default version");
+
+        console.log(`Successfully set default version!`);
+        console.log('Load the environment file to apply the changes: "%s"', environmentFile);
+        return;
+      }
+    }
+  }
+
   const containsUseCommand = getArgument(args, "use");
 
   if (containsUseCommand !== null) {
+    if (args[containsUseCommand.index] === "system") {
+      await printActivationShellScript(await originalEnvironmentVariables({ rootDirectory }));
+      return;
+    }
+
     const processUseCommand = (await import("./processUseCommand")).default;
     const getEnvironmentInformationFromArguments = (
       await import("./getEnvironmentInformationFromArguments")
     ).default;
+    const findSingleNodeInstallInformationOrThrow = (
+      await import("./findSingleNodeInstallInformationOrThrow")
+    ).default;
+
     const environmentInfo = await getEnvironmentInformationFromArguments(
       args,
       containsUseCommand.index
     );
-    const versions = await findNodeInstallInformation(rootDirectory, environmentInfo);
-
-    assert.strict.ok(
-      versions.size <= 1,
-      `More than one version found for environment: ${environmentInfo.environmentName} (${environmentInfo.version})`
+    const versionInfo = await findSingleNodeInstallInformationOrThrow(
+      rootDirectory,
+      environmentInfo
     );
 
-    for (const versionInfo of versions) {
-      await processUseCommand(rootDirectory, {
-        environmentName: versionInfo.id.name,
-        version: versionInfo.id.version,
-        lts: null
-      });
-    }
+    await processUseCommand(rootDirectory, {
+      environmentName: versionInfo.id.name,
+      version: versionInfo.id.version,
+      lts: null
+    });
     return;
   }
 
@@ -127,8 +198,11 @@ import resolveVersion from "./resolveVersion";
 
     await processCreateNodejsEnvironmentCommand(args, {
       rootDirectory,
-      environmentName: environmentInfo.environmentName,
-      version: resolvedVersion.version
+      environmentInformation: {
+        environmentName: environmentInfo.environmentName,
+        version: resolvedVersion.version,
+        lts: resolvedVersion.lts
+      }
     });
   }
 
@@ -136,9 +210,9 @@ import resolveVersion from "./resolveVersion";
 
   assert.strict.ok(
     args.length === 0,
-    `Unrecognized arguments:\n${args.map((arg) => `\t- ${chalk.red(arg)}`).join("\n")}`
+    `Unrecognized arguments:\n${args.map(arg => `\t- ${chalk.red(arg)}`).join("\n")}`
   );
-})().catch((err) => {
+})().catch(err => {
   console.error(err);
   process.exitCode = 1;
 });
