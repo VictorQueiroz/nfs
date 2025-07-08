@@ -39,7 +39,7 @@
     "tar": "^7.4.3"
   },
   "name": "@nfscratch/cli",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "author": {
     "name": "Victor Queiroz",
     "email": "victorcqueirozg@gmail.com"
