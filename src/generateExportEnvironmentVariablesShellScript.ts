@@ -1,5 +1,13 @@
-import defaults from "./config";
-
+/**
+ * Generates a shell script that sets the given environment variables and
+ * defines a `nfs` shell function.
+ *
+ * The `nfs` shell function will call `nfs-js` with the given arguments and
+ * set the environment variables to the output of `nfs-js env`.
+ *
+ * @param inputEnvironmentVariables The environment variables to set.
+ * @returns A shell script as a string.
+ */
 export default async function generateExportEnvironmentVariablesShellScript(
   inputEnvironmentVariables:
     | Map<string, string[] | string>

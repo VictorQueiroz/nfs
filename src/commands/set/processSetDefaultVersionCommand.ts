@@ -1,5 +1,5 @@
-import TextStream from "@textstream/core";
 import { IInputNodeEnvironmentInformation } from "../../getEnvironmentInformationFromArguments";
+import Exception from "../../Exception";
 
 export enum SetDefaultVersionCommandType {
   /**
@@ -29,7 +29,6 @@ export default async function processSetDefaultVersionCommand({
 }): Promise<string | null> {
   const environmentVariables = new Map<string, string>();
   const defaults = (await import("../../config")).default;
-  let writeNfsCommand: ((cs: TextStream) => void) | null;
 
   switch (version.type) {
     case SetDefaultVersionCommandType.Specific: {
@@ -50,10 +49,6 @@ export default async function processSetDefaultVersionCommand({
         defaults.environmentVariableNames.defaultNodeEnvironmentName,
         versionInfo.id.name
       );
-
-      writeNfsCommand = cs => {
-        cs.write(`eval "$(nfs use '${versionInfo.id.name}' '${versionInfo.id.version}')"\n`);
-      };
       break;
     }
     case SetDefaultVersionCommandType.System:
@@ -65,26 +60,5 @@ export default async function processSetDefaultVersionCommand({
       return null;
   }
 
-  const { TextStream } = await import("@textstream/core");
-  const fs = await import("node:fs");
-  const path = await import("node:path");
-  const outputFile = path.resolve(rootDirectory, "environment.sh");
-  const cs = new TextStream();
-
-  cs.write("#!/bin/sh\n\n");
-
-  for (const [key, value] of Object.entries(environmentVariables)) {
-    cs.write(`${key}=${value}\n`);
-    cs.write(`export ${key}\n`);
-    cs.write("\n");
-  }
-
-  cs.write("nfs() {\n", () => {}, "}\n");
-
-  await fs.promises.writeFile(outputFile, cs.value());
-
-  // Make the file executable
-  await fs.promises.chmod(outputFile, 0o755);
-
-  return outputFile;
+  throw new Exception("Not implemented");
 }
