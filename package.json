@@ -18,7 +18,11 @@
   },
   "files": [
     "schema/**/*.js",
-    "src/**/*.js"
+    "src/**/*.js",
+    "schema/**/*.d.ts",
+    "src/**/*.d.ts",
+    "schema/**/*.map",
+    "src/**/*.map"
   ],
   "dependencies": {
     "@jsbuffer/codec": "^1.0.7",
