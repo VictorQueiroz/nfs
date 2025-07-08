@@ -1,7 +1,7 @@
 import { Codec, Deserializer, Serializer } from "@jsbuffer/codec";
 import fs from "fs";
 import dataFileLocationFromFolderLocation from "./dataFileLocationFromFolderLocation";
-import log, { LogLevel } from "./log";
+import log from "./log";
 
 export interface IPersistentDirectoryData<T> {
   decode: (defaultValue: T | null) => Promise<T | null>;
@@ -47,7 +47,7 @@ export default function persistentDirectoryData<T>(
       const encodedContents = await fs.promises.readFile(dataFileLocation);
       result = codec.decode(decode, encodedContents);
     } catch (err) {
-      log(LogLevel.Verbose, () => {
+      log.trace(() => {
         console.error('Failed to read from "%s": %o', dataFileLocation, err);
       });
       result = null;
@@ -91,7 +91,7 @@ export default function persistentDirectoryData<T>(
     try {
       encoded = codec.encode(encode, input);
     } catch (reason) {
-      log(LogLevel.Verbose, () => {
+      log.trace(() => {
         console.error("Failed to encode: %o\n\nInput:\n\n%o", reason, input);
       });
       return null;
@@ -100,7 +100,7 @@ export default function persistentDirectoryData<T>(
     try {
       await fs.promises.writeFile(dataFileLocation, encoded);
     } catch (err) {
-      log(LogLevel.Verbose, () => {
+      log.trace(() => {
         console.error('Failed to write to "%s": %o\n\nInput:\n\n%o', dataFileLocation, err, input);
       });
       return null;

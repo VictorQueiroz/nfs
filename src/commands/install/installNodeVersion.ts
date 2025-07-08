@@ -3,6 +3,8 @@ import { ChangeObject } from "diff";
 import nativeCompiler, { CompilerLanguageType } from "../../nativeCompiler";
 import nodeInstallationPrefixDirectory from "../../nodeInstallationPrefixDirectory";
 import checkFileAccess from "../../checkFileAccess";
+import which from "../../which";
+import log from "../../log";
 
 export interface IInstallNodeVersionParams {
   rootDirectory: string;
@@ -44,7 +46,7 @@ export default async function installNodeVersion(params: IInstallNodeVersionPara
   const path = await import("node:path");
   const console = await import("node:console");
   const fs = await import("node:fs");
-  const { spawn } = await import("@high-nodejs/child_process");
+  const spawn = (await import("../../spawn")).default;
   const downloadSourceCode = (await import("../../downloadSourceCode")).default;
   const createEnvironmentVariables = (await import("../../createEnvironmentVariables")).default;
   const {
@@ -79,15 +81,12 @@ export default async function installNodeVersion(params: IInstallNodeVersionPara
     "--download=all"
   ];
 
-  let needsBuildConfiguration: boolean;
-  if (reconfigure) {
-    needsBuildConfiguration = true;
-  } else {
-    needsBuildConfiguration = await checkFileAccess(
+  let needsBuildConfiguration =
+    reconfigure ||
+    !(await checkFileAccess(
       path.resolve(extractedArchiveFolder, "out"),
       fs.constants.R_OK | fs.constants.W_OK
-    );
-  }
+    ));
 
   const decodedNodeVersionInstallInformation = NodeVersionInstallationInformation({
     id: NodeVersionInstallationInformationReference({ version, name }),
@@ -147,23 +146,35 @@ export default async function installNodeVersion(params: IInstallNodeVersionPara
     needsBuildConfiguration = true;
   }
 
+  const compilerPrependArguments = new Array<string>();
+
+  try {
+    await which("ccache");
+
+    compilerPrependArguments.push("ccache");
+  } catch (err) {
+    log.trace(() => {
+      console.error("Failed to find ccache: %o", err);
+    });
+  }
+
   const environmentVariables = createEnvironmentVariables({
     ...process.env,
-    CC: ["ccache", (await nativeCompiler(CompilerLanguageType.C)).executable],
-    CXX: ["ccache", (await nativeCompiler(CompilerLanguageType.CXX)).executable]
+    CC: [...compilerPrependArguments, (await nativeCompiler(CompilerLanguageType.C)).executable],
+    CXX: [...compilerPrependArguments, (await nativeCompiler(CompilerLanguageType.CXX)).executable]
   });
   const chalk = (await import("chalk")).default;
+  const binaries = { make: await which("make") };
 
   if (clean) {
-    await spawn("make", ["clean"], { log: true, cwd: extractedArchiveFolder }).wait();
+    await spawn(binaries.make, ["clean"], { cwd: extractedArchiveFolder });
   }
 
   if (configure !== null || needsBuildConfiguration) {
     await spawn(path.resolve(extractedArchiveFolder, "configure"), configureArgs, {
-      log: true,
       cwd: extractedArchiveFolder,
       env: environmentVariables
-    }).wait();
+    });
 
     info = await installInformation.encode(
       updateNodeVersionInstallationInformation(info, decodedNodeVersionInstallInformation)
@@ -216,19 +227,17 @@ export default async function installNodeVersion(params: IInstallNodeVersionPara
     compileMakeArguments.push("--jobs", `${jobs}`);
   }
 
-  await spawn("make", ["VERBOSE=1", ...compileMakeArguments], {
-    log: true,
+  await spawn(binaries.make, ["VERBOSE=1", ...compileMakeArguments], {
     env: environmentVariables,
     cwd: extractedArchiveFolder
-  }).wait();
+  });
   console.log();
 
   if (install) {
-    await spawn("make", ["install"], {
-      log: true,
+    await spawn(binaries.make, ["install"], {
       env: environmentVariables,
       cwd: extractedArchiveFolder
-    }).wait();
+    });
     console.log(chalk.green(`Successfully installed Node.js version ${version}`));
   }
 

@@ -12,7 +12,7 @@ export default function getDefaultEnvironmentInformationFromEnvironmentVariables
   };
 
   if (values.version === null || values.environmentName === null || values.lts === null) {
-    log.verbose(() => {
+    log.trace(() => {
       console.log("No environment information found in environment variables: %o", values);
     });
     return null;

@@ -56,16 +56,10 @@ export default async function processSetDefaultVersionCommand({
       };
       break;
     }
-    case SetDefaultVersionCommandType.System: {
+    case SetDefaultVersionCommandType.System:
       environmentVariables.set(defaults.environmentVariableNames.defaultNodeVersion, "");
-
       environmentVariables.set(defaults.environmentVariableNames.defaultNodeEnvironmentName, "");
-
-      writeNfsCommand = cs => {
-        cs.write('eval "$(nfs use system)"\n');
-      };
       break;
-    }
 
     default:
       return null;
@@ -85,10 +79,7 @@ export default async function processSetDefaultVersionCommand({
     cs.write("\n");
   }
 
-  if (writeNfsCommand !== null) {
-    writeNfsCommand(cs);
-    cs.write("\n");
-  }
+  cs.write("nfs() {\n", () => {}, "}\n");
 
   await fs.promises.writeFile(outputFile, cs.value());
 

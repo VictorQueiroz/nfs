@@ -14,13 +14,17 @@ import processSetDefaultVersionCommand, {
 import parseSetCommandKeyFromString, {
   SetCommandKey
 } from "./commands/set/parseSetCommandKeyFromString";
-import originalEnvironmentVariables from "./originalEnvironmentVariables";
 import printActivationShellScript from "./printActivationShellScript";
-import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation";
+import nfsEnvironmentFileLocation from "./nfsEnvironmentFileLocation";
+import defaultRootDirectory from "./defaultRootDirectory";
+import generateExportEnvironmentVariablesShellScript from "./generateExportEnvironmentVariablesShellScript";
 
 // TODO: Add support for running certains patches before compiling again
 
 (async () => {
+  // Increase the stack trace limit to allow long stack traces
+  Error.stackTraceLimit = Infinity;
+
   const path = await import("node:path");
   const process = await import("node:process");
   const { getArgument } = await import("cli-argument-helper");
@@ -33,7 +37,7 @@ import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation
     process.cwd(),
     getArgumentAssignment(args, "--root-dir", getString) ??
       getArgumentAssignment(args, "-r", getString) ??
-      defaults.rootDirectory
+      (await defaultRootDirectory())
   );
 
   // Create NFS information if it doesn't exist
@@ -57,14 +61,29 @@ import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation
       `Failed to create installation information on disk: ${rootDirectory}`
     );
 
-    const environmentFile = await processSetDefaultVersionCommand({
-      rootDirectory,
-      version: { type: SetDefaultVersionCommandType.System }
-    });
+    // const environmentFile = await processSetDefaultVersionCommand({
+    //   rootDirectory,
+    //   version: { type: SetDefaultVersionCommandType.System }
+    // });
 
-    assert.strict.ok(
-      environmentFile !== null,
-      `Failed to set default version on disk: ${rootDirectory}`
+    // assert.strict.ok(
+    //   environmentFile !== null,
+    //   `Failed to set default version on disk: ${rootDirectory}`
+    // );
+  }
+
+  const initCommand = getArgument(args, "init");
+
+  if (initCommand !== null) {
+    const environmentContents = await generateExportEnvironmentVariablesShellScript(new Map());
+    const asyncStreamWrite = (await import("./asyncStreamWrite")).default;
+    const fs = await import("node:fs");
+
+    const outputEnvironmentFileLocation = nfsEnvironmentFileLocation(rootDirectory);
+
+    await asyncStreamWrite(
+      fs.createWriteStream(outputEnvironmentFileLocation),
+      environmentContents.value()
     );
 
     // Installation: Instruct the user to add the following to his shell
@@ -76,10 +95,68 @@ import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation
     );
     console.log(
       chalk.gray(
-        `# ${chalk.bold.cyan(`source "${chalk.bold.white(rootDirectory)}/environment.sh"`)}`
+        `# ${chalk.bold.cyan(`source "${chalk.bold.white(rootDirectory)}/${defaults.nfsEnvironmentFileName}"`)}`
       )
     );
     console.log();
+
+    return;
+  }
+
+  const envArgument = getArgument(args, "env") ?? getArgument(args, "environment") ?? null;
+
+  if (envArgument) {
+    const useCommand = getArgument(args, "use");
+
+    if (useCommand !== null) {
+      const processUseCommandFromArguments = (
+        await import("./commands/use/processUseCommandFromArguments")
+      ).default;
+
+      const environmentVariables = await processUseCommandFromArguments(
+        rootDirectory,
+        args,
+        useCommand.index
+      );
+
+      await printActivationShellScript(environmentVariables);
+
+      return;
+    }
+
+    const setCommand = getArgument(args, "set");
+
+    if (setCommand !== null) {
+      const checkFileAccess = (await import("./checkFileAccess")).default;
+      const fs = await import("node:fs");
+      const asyncStreamWrite = (await import("./asyncStreamWrite")).default;
+      const { TextStream } = await import("@textstream/core");
+      const environmentFile = nfsEnvironmentFileLocation(rootDirectory);
+      const cs = new TextStream();
+
+      if (
+        !(await checkFileAccess(
+          environmentFile,
+          fs.constants.R_OK |
+            // Make sure the file is executable
+            fs.constants.X_OK
+        ))
+      ) {
+        assert.strict.ok(
+          (await processSetDefaultVersionCommand({
+            rootDirectory,
+            version: { type: SetDefaultVersionCommandType.System }
+          })) !== null,
+          `Failed to set default version on disk: ${rootDirectory}`
+        );
+      }
+
+      cs.write(`"${environmentFile}"\n`);
+
+      await asyncStreamWrite(process.stdout, cs.value());
+    }
+
+    return;
   }
 
   const printRootDirectory = getArgument(args, "root");
@@ -153,59 +230,8 @@ import findSingleNodeInstallInformation from "./findSingleNodeInstallInformation
 
   const containsUseCommand = getArgument(args, "use");
 
+  // nfs shell script will call this command with `nfs env` in order to get the environment variables
   if (containsUseCommand !== null) {
-    const processUseCommand = (await import("./processUseCommand")).default;
-
-    if (!args.length) {
-      const fallbackNodeInstallation = await findSingleNodeInstallInformation(rootDirectory, {
-        environmentName: null,
-        version: null,
-        lts: null
-      });
-
-      if (fallbackNodeInstallation !== null) {
-        await processUseCommand(rootDirectory, {
-          environmentName: fallbackNodeInstallation.id.name,
-          version: fallbackNodeInstallation.id.version,
-          lts: null
-        });
-        return;
-      }
-
-      const chalk = (await import("chalk")).default;
-
-      // Print a shell script that prints a red error on screen when the shell script is executed
-      console.log(`printf '${chalk.red(`Could not find any Node.js installation.`)}';\n`);
-      await printActivationShellScript(await originalEnvironmentVariables({ rootDirectory }));
-      return;
-    }
-
-    if (args[containsUseCommand.index] === "system") {
-      await printActivationShellScript(await originalEnvironmentVariables({ rootDirectory }));
-      return;
-    }
-
-    const getEnvironmentInformationFromArguments = (
-      await import("./getEnvironmentInformationFromArguments")
-    ).default;
-    const findSingleNodeInstallInformationOrThrow = (
-      await import("./findSingleNodeInstallInformationOrThrow")
-    ).default;
-
-    const environmentInfo = await getEnvironmentInformationFromArguments(
-      args,
-      containsUseCommand.index
-    );
-    const versionInfo = await findSingleNodeInstallInformationOrThrow(
-      rootDirectory,
-      environmentInfo
-    );
-
-    await processUseCommand(rootDirectory, {
-      environmentName: versionInfo.id.name,
-      version: versionInfo.id.version,
-      lts: null
-    });
     return;
   }
 

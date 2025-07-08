@@ -53,7 +53,7 @@ export default async function getInstallationEnvironmentVariables(
   ).decode(null);
 
   if (existingInstallInfoHandle === null) {
-    log.verbose(() => {
+    log.trace(() => {
       console.error(
         `Failed to decode Node.js installation information: ${Object.values(targetInstallInformation.id)}`
       );

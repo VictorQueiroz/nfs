@@ -1,4 +1,4 @@
-import log, { LogLevel } from "./log";
+import log from "./log";
 
 /**
  * Check if a file can be accessed with the given mode.
@@ -8,7 +8,7 @@ import log, { LogLevel } from "./log";
  *
  * @returns {Promise<boolean>} `true` if the file can be accessed, `false` if not.
  */
-export default async function checkFileAccess(location: string, mode: number) {
+export default async function checkFileAccess(location: string, mode: number): Promise<boolean> {
   const path = await import("node:path");
   const fs = await import("node:fs");
 
@@ -19,7 +19,7 @@ export default async function checkFileAccess(location: string, mode: number) {
   try {
     await fs.promises.access(location, mode);
   } catch (err) {
-    log(LogLevel.Verbose, () => {
+    log.trace(() => {
       console.error('Failed to access "%s" (mode: %o): %o', location, mode, err);
     });
     return false;

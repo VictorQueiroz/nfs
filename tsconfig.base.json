@@ -1,4 +1,5 @@
 {
+  "ts-node": { "preferTsExts": false },
   "compilerOptions": {
     "lib": [],
     "types": [],
@@ -32,6 +33,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true
+    "noPropertyAccessFromIndexSignature": true,
+
+    "skipLibCheck": true
   }
 }

@@ -5,6 +5,7 @@ import persistentDirectoryData from "./persistentDirectoryData";
 import type { NodeVersionInstallationInformation } from "../schema/0.0.1/main.jsb";
 import checkFileAccess from "./checkFileAccess";
 import { IInputNodeEnvironmentInformation } from "./getEnvironmentInformationFromArguments";
+import { glob } from "glob";
 
 /**
  * Finds all Node.js versions installed under the root directory that match the provided version
@@ -34,9 +35,7 @@ export default async function findNodeInstallInformation(
     if (!(await checkFileAccess(prefixDirectory, fs.constants.R_OK | fs.constants.W_OK))) {
       continue;
     }
-    for await (const versionRootDirectory of fs.promises.glob([
-      path.resolve(prefixDirectory, "*/*")
-    ])) {
+    for await (const versionRootDirectory of glob.iterate([path.resolve(prefixDirectory, "*/*")])) {
       // const installDirectory = path.resolve(prefixDirectory, directoryName);
 
       if (
